@@ -22,11 +22,12 @@ setup(
       'setuptools',
       'pillow',
       'docopt',
+      'pyudev',
       ],
 
     entry_points = {
       'console_scripts': [
-        'popin = popster.scripts:main',
+        'popin = popster.popin:main',
       ],
     },
 
