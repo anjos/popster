@@ -1,0 +1,2 @@
+include COPYING README.rst bootstrap.py buildout.cfg
+include popster/data *.jpg
