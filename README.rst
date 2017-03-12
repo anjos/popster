@@ -29,7 +29,7 @@ Conda-based Installation (optional)
 I advise you to install a Conda_-based environment for development and/or
 production use of this package with this command line::
 
-  $ conda create -n popster35 --override-channels --channel=anjos --channel=defaults python=3.5 docopt pillow nose sphinx coverage pymediainfo watchdog
+  $ conda create -n popster35 --override-channels --channel=anjos --channel=defaults python=3.5 docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
   $ source activate popster35 #activates the environment for usage
 
 
@@ -38,8 +38,7 @@ Build
 
 To build the project and make it ready to run, do::
 
-  $ python bootstrap.py
-  $ ./bin/buildout
+  $ buildout
 
 These two commands should leave you with a functional environment. If one of
 the dependencies fails to install (such as Pillow, for example), install them
