@@ -1,0 +1,43 @@
+{% set name="pymediainfo" %}
+{% set version="2.1.5" %}
+
+package:
+  name: {{ name | lower }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/p/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  md5: 124e95c97e4a2d3bedc71214a34d31af
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - mediainfo
+
+test:
+  imports:
+    - {{ name }}
+
+  requires:
+    - nose
+
+  source_files:
+    - tests/*
+
+  commands:
+    - nosetests -sv tests
+
+about:
+  home: https://github.com/sbraz/pymediainfo
+  license: MIT License
+  summary: A Python wrapper for the mediainfo library
+  license_family: MIT

@@ -1,0 +1,33 @@
+{% set name="MediaInfo" %}
+{% set version="0.7.92.1" %}
+
+package:
+  name: {{ name | lower }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}_CLI_{{ version }}_GNU_FromSource.tar.bz2
+  url: https://mediaarea.net/download/binary/{{ name | lower }}/{{ version }}/{{ name }}_CLI_{{ version }}_GNU_FromSource.tar.bz2
+  md5: f1a6b11644f11f7c67abe42b6691782f
+
+build:
+  number: 0
+
+requirements:
+  build:
+    - pkg-config [unix]
+    - zlib 1.2.*
+    - curl
+
+  run:
+    - zlib 1.2.*
+    - curl 7.52.*
+
+about:
+  license: BSD
+  home: https://mediaarea.net/
+  summary: {{ name }} is a convenient unified display of the most relevant technical and tag data for video and audio files.
+
+extra:
+  recipe-maintainers:
+    - anjos
