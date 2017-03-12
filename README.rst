@@ -30,7 +30,6 @@ I advise you to install a Conda_-based environment for development and/or
 production use of this package with this command line::
 
   $ conda create -n popster35 --override-channels --channel=anjos --channel=defaults python=3.5 docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
-  $ source activate popster35 #activates the environment for usage
 
 
 Build
@@ -38,13 +37,10 @@ Build
 
 To build the project and make it ready to run, do::
 
+  $ source activate popster35 #activates the environment for usage
   $ buildout
 
-These two commands should leave you with a functional environment. If one of
-the dependencies fails to install (such as Pillow, for example), install them
-using your preferred package manager (e.g., using Conda_ as advised above) and
-then start from scratch. Use the ``python`` binary from the respective
-installation to avoid issues in this step.
+This command should leave you with a functional environment.
 
 
 Testing
@@ -76,7 +72,7 @@ prepare::
 Then, you can build dependencies one by one, in order::
 
   $ conda-build deps/mediainfo
-  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog; do conda-build deps/$p --python=$v; done; done
+  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog zc.buildout; do conda-build deps/$p --python=$v; done; done
 
 To upload all built dependencies (so you don't have to re-build them
 everytime), do::
@@ -84,7 +80,7 @@ everytime), do::
   $ anaconda login
   # enter credentials
   $ anaconda upload <conda-bld>/<os>/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog}-*.tar.bz2
+  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog,zc.buildout}-*.tar.bz2
 
 
 .. Place your references after this line
