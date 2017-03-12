@@ -23,11 +23,7 @@ setup(
       'pillow',
       'docopt',
       'watchdog',
-      'pytest-runner',
-      ],
-
-    test_requires=[
-      'pytest',
+      'pymediainfo',
       ],
 
     entry_points = {
