@@ -1,2 +1,2 @@
-include COPYING README.rst bootstrap.py buildout.cfg
+include COPYING README.rst buildout.cfg
 recursive-include popster/data *.jpg
