@@ -11,7 +11,7 @@ import pkg_resources
 
 import nose.tools
 
-from .sorter import read_creation_date, copy, rcopy
+from .sorter import read_creation_date, copy, rcopy, DateReadoutError
 
 
 def data_path(f):
@@ -24,15 +24,15 @@ def test_jpeg_readout():
 
   #Tests one extract the proper exif tag from a jpeg file
 
-  date = read_creation_date(data_path('image_with_exif.jpg'))
+  date = read_creation_date(data_path('img_with_exif.jpg'))
   assert date == datetime.datetime(2003, 12, 14, 12, 1, 44)
 
 
-@nose.tools.raises(TypeError)
+@nose.tools.raises(DateReadoutError)
 def test_exif_failure():
 
   #Tests it raises a proper exception when the jpeg file has no exif info
-  read_creation_date(data_path('img_without_exif.jpg.jpg'))
+  read_creation_date(data_path('img_without_exif.jpg'))
 
 
 def test_move():
@@ -40,7 +40,7 @@ def test_move():
   #Tests if can organize at least the sample photo
 
   #Temporary setup
-  src = data_path('image_with_exif.jpg')
+  src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
   with tempfile.TemporaryDirectory() as base, \
@@ -60,7 +60,7 @@ def test_move_fails():
   #Tests if can correctly detect moving fails
 
   #Temporary setup
-  src = data_path('image_without_exif.jpg')
+  src = data_path('img_without_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
   # STOPPED HERE!
@@ -81,7 +81,7 @@ def test_move_dry():
   #Tests if can organize at least the sample photo
 
   #Temporary setup
-  src = data_path('image_with_exif.jpg')
+  src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
   with tempfile.TemporaryDirectory() as base, \
@@ -100,7 +100,7 @@ def test_copy():
   #Tests if can organize at least the sample photo
 
   #Temporary setup
-  src = data_path('image_with_exif.jpg')
+  src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
   with tempfile.TemporaryDirectory() as base, \
@@ -119,7 +119,7 @@ def test_copy_dry():
   #Tests if can organize at least the sample photo
 
   #Temporary setup
-  src = data_path('image_with_exif.jpg')
+  src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
   with tempfile.TemporaryDirectory() as base, \
