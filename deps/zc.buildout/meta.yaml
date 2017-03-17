@@ -1,12 +1,14 @@
+{% set name = "zc.buildout" %}
 {% set version = "2.9.2" %}
 
 package:
-  name: zc.buildout
+  name: {{ name }}
   version: {{ version }}
 
 source:
-  git_rev: {{ version }}
-  git_url: https://github.com/buildout/buildout.git
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/z/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  md5: e629fca85f8539968d2c44c7738509fa
 
 build:
   number: 0
