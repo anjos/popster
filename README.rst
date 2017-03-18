@@ -29,7 +29,7 @@ Conda-based Installation (optional)
 I advise you to install a Conda_-based environment for development and/or
 production use of this package with this command line::
 
-  $ conda env create -f popster.yml
+  $ conda env create -f dev.yml
 
 
 Build
