@@ -72,7 +72,7 @@ prepare::
 Then, you can build dependencies one by one, in order::
 
   $ conda-build deps/mediainfo
-  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog zc.buildout; do conda-build deps/$p --python=$v; done; done
+  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog zc.buildout ipdb; do conda-build deps/$p --python=$v; done; done
 
 To upload all built dependencies (so you don't have to re-build them
 everytime), do::
