@@ -1,0 +1,15 @@
+name: popster
+channels:
+- anjos
+- defaults
+dependencies:
+- python=3.5
+- docopt
+- pillow
+- nose
+- sphinx
+- coverage
+- pymediainfo
+- watchdog
+- zc.buildout
+- ipdb
