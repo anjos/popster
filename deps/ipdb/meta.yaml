@@ -1,0 +1,46 @@
+{% set version = "0.10.2" %}
+
+package:
+  name: ipdb
+  version: {{ version }}
+
+source:
+  url: https://pypi.io/packages/source/i/ipdb/ipdb-{{ version }}.tar.gz
+  md5: 75aad4924214a8526e38aefd4d3099b1
+
+build:
+  number: 0
+  preserve_egg_dir: True
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - ipython >=0.10.2
+    - setuptools
+
+  run:
+    - python
+    - ipython >=0.10.2
+
+test:
+  requires:
+    - nose
+
+  imports:
+    - ipdb
+
+  source_files:
+    - tests/test_import.py
+
+  commands:
+    - nosetests tests/test_import.py
+
+about:
+  home: https://github.com/gotcha/ipdb
+  license: BSD
+  summary: 'IPython-enabled pdb'
+
+extra:
+  recipe-maintainers:
+    - anjos
