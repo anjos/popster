@@ -27,6 +27,9 @@ Options:
                               [default: /share/Pictures/Para Organizar]
   -c, --copy                  Copy instead of moving files from the source
                               folder (this will be a bit slower).
+  -i, --idleness=<secs>       Number of seconds to wait until no more activity
+                              is registered and before it can dispatch summary
+                              e-mails [default: 60]
 
 
 Examples:
@@ -44,6 +47,7 @@ Examples:
 
 import os
 import sys
+import time
 
 import logging
 logger = logging.getLogger(__name__)
@@ -76,11 +80,20 @@ def main(user_input=None):
 
   from .sorter import Sorter
   the_sorter = Sorter(
-      src=args['--source'],
+      base=args['--source'],
       dst=args['--dest'],
       fmt=args['--folder-format'],
       move=not(args['--copy']),
       dry=args['--dry-run'],
       email=args['--email'],
+      idleness=int(args['--idleness']),
       )
-  the_sorter.run()
+
+  the_sorter.start()
+  try:
+    while True:
+      time.sleep(1)
+      the_sorter.email_check()
+  except KeyboardInterrupt:
+    the_sorter.stop()
+  the_sorter.join()
