@@ -33,11 +33,11 @@ Examples:
 
   1. Test what would do:
 
-     $ %(prog)s -vv --email=me@example.com --dry-run
+     $ %(prog)s -vv --email --dry-run
 
   2. Runs the program and e-mails when done:
 
-     $ %(prog)s -vv --email=me@example.com
+     $ %(prog)s -vv --email
 
 """
 
