@@ -18,12 +18,15 @@ Options:
                               going to be stored [default: %%Y/%%B/%%d.%%m.%%Y]
   -n, --dry-run               If set, just tell what it would do instead of
                               doing it. This flag is good for testing.
-  -e, --email=<dest>          E-mail to use for sending status information
+  -e, --email                 If set, e-mail agents responsible every minute
+                              about status
   -s, --source=<path>         Path leading to the folder to watch for
                               photographs to import
                               [default: /share/Download/SmartImport]
   -d, --dest=<path>           Path leading to the folder to dump photos to
                               [default: /share/Pictures/Para Organizar]
+  -c, --copy                  Copy instead of moving files from the source
+                              folder (this will be a bit slower).
 
 
 Examples:
@@ -71,6 +74,13 @@ def main(user_input=None):
   if args['--verbose'] == 1: logger.setLevel(logging.INFO)
   elif args['--verbose'] >= 2: logger.setLevel(logging.DEBUG)
 
-  from .sorter import sort_data
-  return sort_data(args['--source'], args['--dest'], args['--folder-format'],
-      args['--dry-run'])
+  from .sorter import Sorter
+  the_sorter = Sorter(
+      src=args['--source'],
+      dst=args['--dest'],
+      fmt=args['--folder-format'],
+      move=not(args['--copy']),
+      dry=args['--dry-run'],
+      email=args['--email'],
+      )
+  the_sorter.run()

@@ -5,23 +5,40 @@
 
 
 import os
+import time
 import stat
 import errno
 import shutil
 import datetime
+import platform
+
 import logging
 logger = logging.getLogger(__name__)
+
 from PIL import Image, ExifTags
 from pymediainfo import MediaInfo
+import watchdog.events
+import watchdog.observers
+import smtplib
 
 
 EXTENSIONS=[
     '.jpg',
-    '.avi',
+    '.thm', #thumbnail files, with exif information (little jpg)
+    '.avi', #older cameras
     '.mp4', #canon powershot g7 x mark ii
     '.mov', #iphone, powershot sx230 hs, canon eos 500d
+    '.m4v', #ipod encoded clips
     ]
 """List of extensions supported by this program (lower-case)"""
+
+
+EMAIL_SENDER = 'Andre Anjos <andre.dos.anjos@gmail.com>'
+EMAIL_RECEIVERS = [
+    'Andre Anjos <andre.dos.anjos@gmail.com>',
+    #'Ana Carolina Anjos <ana.carolina.anjos@gmail.com>',
+    ]
+"""E-mail sender and receivers for informative actions"""
 
 
 FILEMASK=(stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH|stat.S_IWOTH)
@@ -108,6 +125,7 @@ CREATION_DATE_READER={
     '.avi': _video_read_creation_date,
     '.mp4': _video_read_creation_date,
     '.mov': _video_read_creation_date,
+    '.m4v': _video_read_creation_date,
     }
 """For each supported extension, uses a specific reader for its date"""
 
@@ -276,6 +294,13 @@ def copy(src, base, dst, fmt, move, dry):
   dst_dirname = date.strftime(fmt).lower()
   dst_path = _make_dirs(dst, dst_dirname, dry)
   dst_filename = os.path.join(dst, dst_dirname, os.path.basename(src).lower())
+
+  # if a file with the same name exists, recalls myself with a "+" added to
+  # the destination filename
+  if os.path.exists(dst_filename):
+    dst_filename,e = os.path.splitext(dst_filename)
+    dst_filename += '+' + e
+
   _copy_file(src, dst_filename, move, dry)
 
   # 4. check originating directory - if empty, suppress it up to ``base``
@@ -299,8 +324,6 @@ def rcopy(base, dst, fmt, move, dry):
 
 
   Parameters:
-
-    src (str): The path leading to the source object that must exist
 
     base (str): The path leading to the base directory that is being monitored.
       This value is provided so we don't accidentally erase it.
@@ -338,6 +361,259 @@ def rcopy(base, dst, fmt, move, dry):
         good.append(copy(os.path.join(path, f), base, dst, fmt, move, dry))
       except Exception as e:
         logger.warn('could not copy/move %s to new destination: %s', path, e)
-        bad.append(path)
+        bad.append(os.path.join(path, f))
 
   return good, bad
+
+
+class Email(object):
+  '''An object representing a message to be sent to maintainers
+
+
+  Parameters:
+
+    subject (str): The e-mail subject
+
+    body (str): The e-mail body
+
+    sender (str, Optional): The e-mail sender
+
+    to (str, Optional): The e-mail receiver
+
+  '''
+
+  def __init__(self, subject, body, sender=EMAIL_SENDER, to=EMAIL_RECEIVERS):
+
+    from email.mime.text import MIMEText
+    self.msg = MIMEText(body)
+    self.msg['Subject'] = subject
+    self.sender = sender
+    self.msg['From'] = self.sender
+    self.to = to
+    self.msg['To'] = ', '.join(self.to)
+
+
+  def send(self):
+    '''Sends message'''
+
+    s = smtplib.SMTP('localhost')
+    s.send_message(self.sender, self.to, self.msg.as_string())
+    s.quit()
+
+
+  def message(self):
+    '''Returns a string representation of the message'''
+
+    return self.msg.as_bytes()
+
+
+class Handler(watchdog.events.PatternMatchingEventHandler):
+  '''Handles file moving/copying
+
+
+  Parameters:
+
+    base (str): The path leading to the base directory that is being monitored.
+      This value is provided so we don't accidentally erase it.
+
+    dst (str): A path leading to the base destination directory where to store
+      pictures. If the path does not exist, it will be created.
+
+    fmt (str): A string containing date formatters for a **folder** structure
+      that will be added to destination folder, prefixing the files copied. For
+      example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
+      used, please refer to :py:func:`time.strftime`.
+
+    move (bool): If set to ``True``, move instead of copying
+
+    dry (bool): If set to ``True``, then it will not copy anything, just log.
+
+  '''
+
+  def __init__(self, base, dst, fmt, move, dry):
+
+    super(Handler, self).__init__(
+        patterns = ['*%s' % k for k in EXTENSIONS],
+        ignore_patterns = [],
+        ignore_directories = True,
+        case_sensitive = False,
+        )
+
+    self.base = base
+    self.dst = dst
+    self.fmt = fmt
+    self.move = move
+    self.dry = dry
+
+    # sets up a basic logger
+    self.logger = watchdog.events.LoggingEventHandler()
+
+    # cleans-up before we start to watch, sets-up good/bad lists
+    self.good, self.bad = rcopy(base, dst, fmt, move, dry)
+    self.last_activity = time.time()
+
+
+  def on_any_event(self, event):
+    '''Catch-all event handler
+
+
+    Parameters:
+
+      event (watchdog.events.FileSystemEvent): Event corresponding to the
+        event that occurred with a specific file or directory being observed
+
+    '''
+
+    self.logger.on_any_event(event)
+    self.last_activity = time.time()
+
+
+  def on_created(self, event):
+    '''Called when a file or directory is created
+
+
+    Parameters:
+
+      event (watchdog.events.FileSystemEvent): Event corresponding to the
+        event that occurred with a specific file or directory being observed
+
+    '''
+
+    try:
+      self.last_activity = time.time() #log before starting
+      self.good.append(copy(event.src_path, self.base, self.dst, self.fmt,
+        self.move, self.dry))
+    except Exception as e:
+      logger.warn('could not copy/move %s to new destination: %s',
+          event.src_path, e)
+      self.bad.append(event.src_path)
+    finally:
+      self.last_activity = time.time()
+
+
+  def reset(self):
+    '''Reset accumulated good/bad lists'''
+
+    self.good = []
+    self.bad = []
+    self.last_activity = time.time()
+
+
+  def needs_clearing(self):
+    '''Returns ``True`` if this handler has accumulated outputs'''
+
+    return bool(self.good or self.bad)
+
+
+  def write_email(self):
+    '''Composes e-mail about accumulated outputs'''
+
+    # compose e-mail
+    if not self.good:
+      subject = '[orquidea/photo] Warning: %d files need manual organization!'
+    else:
+      subject = '[orquidea/photo] organized %d files for you'
+
+    body = 'Hello,\n' \
+        '\n' \
+        'This is an automated message that summarizes actions I performed ' \
+        'at folder\n %(base)s for you.\n' \
+        '\n' \
+        'List of files correctly moved (%(good_len)s):\n' \
+        '\n'
+
+    body += '\n'.join(self.good) + \
+        '\n' \
+        'List of files that could NOT be moved (%(bad_len)s):\n' \
+        '\n'
+    body += '\n'.join(self.bad) + '\n'
+
+    body += 'That is it, have a good day!\n' \
+        '\n' \
+        'Your faithul robot\n'
+
+    body = body % dict(
+        base=self.base,
+        good_len=len(self.good),
+        bad_len=len(self.bad),
+        )
+
+    email = Email(subject, body)
+    return email
+
+
+class Sorter(object):
+  '''An object that can observe and sort pics from a given directory
+
+
+  Parameters:
+
+    base (str): The path leading to the base directory that is being monitored.
+      This value is provided so we don't accidentally erase it.
+
+    dst (str): A path leading to the base destination directory where to store
+      pictures. If the path does not exist, it will be created.
+
+    fmt (str): A string containing date formatters for a **folder** structure
+      that will be added to destination folder, prefixing the files copied. For
+      example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
+      used, please refer to :py:func:`time.strftime`.
+
+    move (bool): If set to ``True``, move instead of copying
+
+    dry (bool): If set to ``True``, then it will not copy anything, just log.
+
+    email (bool): If set to ``True``, then e-mail admins about results.
+
+    idleness (int): Time after which, we should report
+
+  '''
+
+  def __init__(self, base, dst, fmt, move, dry, email, idleness):
+
+    self.observer = watchdog.observers.Observer()
+    self.handler = Handler(base, dst, fmt, move, dry)
+    self.email = email
+    self.idleness = idleness
+
+
+  def email_check(self):
+    '''Checks if needs to send e-mail, of so, do it'''
+
+    # if there seems to be activity on the handler (this means file system
+    # events are still happening), then wait more
+    should_check = (time.time() - self.handler.last_activity) > self.idleness
+    if not should_check: return
+    self.handler.last_activity = time.time()
+
+    # if there is nothing to report, skip
+    if not self.handler.needs_clearing(): return
+
+    email = self.handler.write_email()
+
+    if self.email:
+      email.send()
+      logger.debug(email.as_string())
+    else:
+      logger.info(email.as_string())
+
+    self.hander.reset()
+
+
+  def start(self):
+    '''Runs the watchdog loop, interrupts with signal or CTRL-C'''
+
+    self.observer.schedule(self.handler, self.handler.base, recursive=True)
+    self.observer.start()
+
+
+  def stop(self):
+    '''Stops the sorter'''
+
+    self.observer.stop()
+
+
+  def join(self):
+    '''Joins the sorting thread'''
+
+    self.observer.join()
