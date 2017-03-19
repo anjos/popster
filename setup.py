@@ -28,7 +28,7 @@ setup(
 
     entry_points = {
       'console_scripts': [
-        'sorter = popster.sorter:main',
+        'watch = popster.watch:main',
       ],
     },
 
