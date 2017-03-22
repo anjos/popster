@@ -301,7 +301,7 @@ def test_watch():
         idleness=10)
     sorter.start()
 
-    # simulates moving data into the base directory
+    # simulates copying (creating) data into the base directory
     src = os.path.join(base, os.path.basename(data))
     shutil.copytree(data, src)
 
@@ -320,6 +320,61 @@ def test_watch():
       assert not os.path.exists(k), '%r still exists' % k
 
     assert os.path.exists(src)
+    assert os.path.exists(base)
+
+
+def test_watch_move():
+
+  # Tests if we can move a whole ensemble of files and that the source
+  # directory is correctly removed - in this variant, we move the files into
+  # the "watched" directory instead of copying them, to make sure we don't need
+  # another "on_move" method in our Handler class.
+
+  data = data_path()
+  fmt = '%Y/%B/%d.%m.%Y'
+
+  # Ground truth
+  bad_src = ['img_without_exif.jpg']
+  bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
+  good_src = [
+      'img_with_exif.jpg',
+      'mp4.mp4',
+      ]
+  good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
+  good_dst = [
+      os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
+      ]
+
+  with tempfile.TemporaryDirectory() as start, \
+      tempfile.TemporaryDirectory() as base, \
+      tempfile.TemporaryDirectory() as dst:
+
+    sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
+        idleness=10)
+    sorter.start()
+
+    # simulates moving data into the base directory
+    starting_point = os.path.join(start, os.path.basename(data))
+    shutil.copytree(data, starting_point)
+    shutil.move(starting_point, base)
+
+    time.sleep(1)
+    sorter.stop()
+    sorter.join()
+
+    bad_full = [os.path.join(base, k) for k in bad_src]
+    for k in bad_full:
+      assert os.path.exists(k), '%r does not exist' % k
+    good_full = [os.path.join(dst, k) for k in good_dst]
+    for k in good_full:
+      assert os.path.exists(k), '%r does not exist' % k
+    old_good_full = [os.path.join(base, k) for k in good_src]
+    for k in old_good_full:
+      assert not os.path.exists(k), '%r still exists' % k
+
+    assert not os.path.exists(starting_point)
+    assert os.path.exists(os.path.join(base, os.path.basename(data)))
     assert os.path.exists(base)
 
 
