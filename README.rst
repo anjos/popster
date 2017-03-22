@@ -80,7 +80,7 @@ everytime), do::
   $ anaconda login
   # enter credentials
   $ anaconda upload <conda-bld>/<os>/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog,zc.buildout}-*.tar.bz2
+  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog,zc.buildout,ipdb}-*.tar.bz2
 
 
 .. Place your references after this line
