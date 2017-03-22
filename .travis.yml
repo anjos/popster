@@ -19,7 +19,7 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create -q -n popster python=$TRAVIS_PYTHON_VERSION docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
+  - conda create -c anjos -q -n popster python=$TRAVIS_PYTHON_VERSION docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
   - source activate popster
   - buildout
 
