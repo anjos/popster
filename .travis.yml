@@ -5,6 +5,8 @@ python:
   - "3.5"
   - "3.6"
 install:
+  - sudo apt-get update
+  - sudo apt-get install libstdc++6
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
   - if [[ "$TRAVIS_PYTHON_VERSION" == "2.7" ]]; then
@@ -19,7 +21,6 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda clean --all
   - conda create -c anjos -q -n popster python=$TRAVIS_PYTHON_VERSION docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
   - source activate popster
   - buildout
