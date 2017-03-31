@@ -7,10 +7,17 @@ import os
 import time
 import shutil
 import datetime
-import tempfile
 import pkg_resources
 
 import nose.tools
+
+# work around to get TemporaryDirectory even in Python 2.x
+import six
+if six.PY2:
+  from .backport import TemporaryDirectory
+else:
+  from tempfile import TemporaryDirectory
+
 
 from .sorter import read_creation_date, copy, rcopy, DateReadoutError, Sorter
 
@@ -53,8 +60,7 @@ def test_move():
   src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -74,8 +80,7 @@ def test_move_fails():
   src = data_path('img_without_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -94,8 +99,7 @@ def test_move_dry():
   src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -113,8 +117,7 @@ def test_copy():
   src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -132,8 +135,7 @@ def test_copy_same():
   src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -158,8 +160,7 @@ def test_copy_fails():
   src = data_path('img_without_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -177,8 +178,7 @@ def test_copy_dry():
   src = data_path('img_with_exif.jpg')
   fmt = '%Y/%B/%d.%m.%Y'
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     subfolder = os.path.join(base, 'subfolder')
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
@@ -208,8 +208,7 @@ def test_move_many():
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     src = os.path.join(base, os.path.basename(data))
     shutil.copytree(data, src)
     good, bad = rcopy(base, dst, fmt, move=True, dry=False)
@@ -247,8 +246,7 @@ def test_move_all():
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     src = os.path.join(base, os.path.basename(data))
     shutil.copytree(data, src)
 
@@ -294,8 +292,7 @@ def test_watch():
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
         idleness=10)
@@ -346,9 +343,8 @@ def test_watch_move():
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
-  with tempfile.TemporaryDirectory() as start, \
-      tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as start, TemporaryDirectory() as base, \
+      TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
         idleness=10)
@@ -399,8 +395,7 @@ def test_start_with_files():
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
-  with tempfile.TemporaryDirectory() as base, \
-      tempfile.TemporaryDirectory() as dst:
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
     # simulates moving data into the base directory before watchdog is started
     src = os.path.join(base, os.path.basename(data))
