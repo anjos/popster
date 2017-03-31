@@ -1,7 +1,7 @@
 language: python
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
-  - "2.7"
+  #- "2.7"
   - "3.5"
   - "3.6"
 install:
@@ -19,6 +19,7 @@ install:
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
+  - conda clean --all
   - conda create -c anjos -q -n popster python=$TRAVIS_PYTHON_VERSION docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
   - source activate popster
   - buildout
