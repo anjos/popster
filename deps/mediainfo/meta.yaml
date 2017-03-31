@@ -11,17 +11,20 @@ source:
   md5: f1a6b11644f11f7c67abe42b6691782f
 
 build:
-  number: 1
+  number: 2
 
 requirements:
   build:
     - pkg-config [unix]
     - zlib 1.2.*
     - curl
+    - gcc 4.8.5
+    - libgcc 4.8.5
 
   run:
     - zlib 1.2.*
     - curl 7.52.*
+    - libgcc 4.8.5
 
 about:
   license: BSD
