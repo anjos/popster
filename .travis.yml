@@ -17,7 +17,8 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels anjos
-  - conda update -q conda
+  - conda update -n root -q conda
+  - conda install -n root -q conda-build
   # Useful for debugging any issues with conda
   - conda info -a
   - conda build conda
