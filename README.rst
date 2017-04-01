@@ -48,7 +48,7 @@ Testing
 
 To test the package, run the following::
 
-  $ ./bin/nosetests -sv
+  $ ./bin/nosetests -sv --with-coverage --cover-package=popster
 
 
 Usage

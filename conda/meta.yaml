@@ -1,5 +1,5 @@
 {% set name="popster" %}
-{% set version="1.0.0b0" %}
+{% set version="1.0.0" %}
 
 package:
   name: {{ name }}
@@ -31,9 +31,10 @@ test:
 
   requires:
     - nose
+    - coverage
 
   commands:
-    - nosetests -sv {{ name }}
+    - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
 
 about:
   home: https://github.com/anjos/popster
