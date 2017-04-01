@@ -20,14 +20,32 @@ copy photos from your camera or SD card. In my QNAP NAS, that folder is
 Installation
 ------------
 
-Here are the installation steps to get the ball rolling on your NAS.
+I advise you to install a Conda_-based environment for deployment with this
+command line::
+
+  $ conda create -n popster python=x.y popster
+
+Where ``x.y`` can be either ``2.7``, ``3.5`` or ``3.6``. Once the environment
+is installed, activate it to be able to call binaries::
+
+  $ source activate popster
 
 
-Conda-based Installation (optional)
-===================================
+Usage
+-----
 
-I advise you to install a Conda_-based environment for development and/or
-production use of this package with this command line::
+There is a single program that you can launch as a daemon on your system::
+
+  $ ./bin/watch --help
+
+And a complete help message will be displayed.
+
+
+Development
+-----------
+
+I advise you to install a Conda_-based environment for development with this
+command line::
 
   $ conda env create -f dev.yml
 
@@ -51,28 +69,22 @@ To test the package, run the following::
   $ ./bin/nosetests -sv --with-coverage --cover-package=popster
 
 
-Usage
------
-
-There is a single program that you can launch as a daemon on your system::
-
-  $ ./bin/watch --help
-
-And a complete help message will be displayed.
-
-
-Development
------------
+Conda Builds
+============
 
 Building dependencies requires you install ``conda-build``. Do the following to
 prepare::
 
-  $ conda install conda-build anaconda-client
+  $ conda install -n root conda-build anaconda-client
 
 Then, you can build dependencies one by one, in order::
 
   $ conda-build deps/mediainfo
-  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog zc.buildout ipdb; do conda-build deps/$p --python=$v; done; done
+  $ for v in 2.7 3.4 3.5 3.6; do for p in pymediainfo argh pathtools watchdog zc.buildout ipdb conda; do conda-build deps/$p --python=$v; done; done
+
+
+Anaconda Uploads
+================
 
 To upload all built dependencies (so you don't have to re-build them
 everytime), do::
@@ -80,7 +92,7 @@ everytime), do::
   $ anaconda login
   # enter credentials
   $ anaconda upload <conda-bld>/<os>/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog,zc.buildout,ipdb}-*.tar.bz2
+  $ anaconda upload <conda-bld>/<os>/{pymediainfo,argh,pathtools,watchdog,zc.buildout,ipdb,popster}-*.tar.bz2
 
 
 .. Place your references after this line
