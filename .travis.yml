@@ -21,7 +21,7 @@ install:
   - conda install -n root -q conda-build
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda build conda
+  - conda build --python=$v conda
   - conda create -q -n popster python=$TRAVIS_PYTHON_VERSION popster --use-local
   - source activate popster
 
