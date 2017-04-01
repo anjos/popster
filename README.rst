@@ -1,3 +1,6 @@
+.. image:: https://travis-ci.org/anjos/popster.svg?branch=master
+   :target: https://travis-ci.org/anjos/popster
+
 ---------
  Popster
 ---------
