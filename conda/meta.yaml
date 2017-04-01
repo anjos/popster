@@ -1,0 +1,41 @@
+{% set name="popster" %}
+{% set version="1.0.0b0" %}
+
+package:
+  name: {{ name }}
+  version: {{ version }}
+
+source:
+  path: ../
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+
+  run:
+    - python
+    - pillow
+    - docopt
+    - watchdog
+    - pymediainfo
+
+test:
+  imports:
+    - {{ name }}
+
+  requires:
+    - nose
+
+  commands:
+    - nosetests -sv {{ name }}
+
+about:
+  home: https://github.com/anjos/popster
+  license: GPLv3
+  summary: A pythonic photo importer for my QNAP NAS
+  license_family: GPL

@@ -3,7 +3,7 @@ python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
   - "3.5"
-  #- "3.6"
+  - "3.6"
 install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
@@ -16,12 +16,13 @@ install:
   - export PATH="$HOME/conda/bin:$PATH"
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels anjos
   - conda update -q conda
   # Useful for debugging any issues with conda
   - conda info -a
-  - conda create -c anjos -q -n popster python=$TRAVIS_PYTHON_VERSION docopt pillow nose sphinx coverage pymediainfo watchdog zc.buildout
+  - conda build conda
+  - conda create -q -n popster python=$TRAVIS_PYTHON_VERSION popster --use-local
   - source activate popster
-  - buildout
 
 script:
-  - ./bin/nosetests -sv
+  - nosetests -sv popster
