@@ -11,7 +11,7 @@ import sys
 import warnings as _warnings
 from shutil import rmtree as _rmtree
 
-from backports.weakref import finalize
+from .weakref import finalize
 
 
 # XXX backport:  Rather than backporting all of mkdtemp(), we just create a

@@ -14,7 +14,7 @@ import nose.tools
 # work around to get TemporaryDirectory even in Python 2.x
 import six
 if six.PY2:
-  from .backport import TemporaryDirectory
+  from .backports.tempfile import TemporaryDirectory
 else:
   from tempfile import TemporaryDirectory
 
