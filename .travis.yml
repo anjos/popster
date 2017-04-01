@@ -1,9 +1,11 @@
 language: python
+
 python:
   # We don't actually use the Travis Python, but this keeps it organized.
   - "2.7"
   - "3.5"
   - "3.6"
+
 install:
   # We do this conditionally because it saves us some downloading if the
   # version is the same.
@@ -20,10 +22,7 @@ install:
   - conda update -n root -q conda
   - conda install -n root -q conda-build
   # Useful for debugging any issues with conda
-  - conda info -a
-  - conda build --python=$TRAVIS_PYTHON_VERSION conda
-  - conda create -q -n popster python=$TRAVIS_PYTHON_VERSION popster --use-local
-  - source activate popster
+  #- conda info -a
 
 script:
-  - nosetests -sv popster
+  - conda build --python=$TRAVIS_PYTHON_VERSION conda
