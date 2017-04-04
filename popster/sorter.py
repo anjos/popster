@@ -5,6 +5,7 @@
 
 
 import os
+import sys
 import time
 import stat
 import errno
@@ -33,6 +34,23 @@ EXTENSIONS=[
 """List of extensions supported by this program (lower-case)"""
 
 
+def _ignore_dir(d):
+  """Select directories that should be ignored"""
+
+  return d.startswith('.') or d in ('MISC', 'CANONMSC')
+
+
+def _ignore_file(path, f):
+  """Select files that should be ignored"""
+
+  if f in ('.DS_Store', '.Icon'): return True
+
+  for p in path.split(os.sep):
+    if _ignore_dir(p): return True
+
+  return False
+
+
 EMAIL_SENDER = 'Andre Anjos <andre.dos.anjos@gmail.com>'
 EMAIL_RECEIVERS = [
     'Andre Anjos <andre.dos.anjos@gmail.com>',
@@ -53,6 +71,48 @@ class DateReadoutError(IOError):
 class UnsupportedExtensionError(IOError):
   """Exception raised in case :py:func:`read_creation_date` does not support the extension on file being read"""
   pass
+
+
+def setup_logger(name, verbosity):
+  '''Sets up the logging of a script
+
+
+  Parameters:
+
+    name (str): The name of the logger to setup
+
+    verbosity (int): The verbosity level to operate with. A value of ``0``
+      (zero) means only errors, ``1``, errors and warnings; ``2``, errors,
+      warnings and informational messages and, finally, ``3``, all types of
+      messages including debugging ones.
+
+  '''
+
+  logger = logging.getLogger(name)
+  formatter = logging.Formatter("%(name)s@%(asctime)s -- %(levelname)s: " \
+      "%(message)s")
+
+  _warn_err = logging.StreamHandler(sys.stderr)
+  _warn_err.setFormatter(formatter)
+  _warn_err.setLevel(logging.WARNING)
+
+  class _InfoFilter:
+    def filter(self, record): return record.levelno <= logging.INFO
+  _debug_info = logging.StreamHandler(sys.stdout)
+  _debug_info.setFormatter(formatter)
+  _debug_info.setLevel(logging.DEBUG)
+  _debug_info.addFilter(_InfoFilter())
+
+  logger.addHandler(_debug_info)
+  logger.addHandler(_warn_err)
+
+
+  logger.setLevel(logging.ERROR)
+  if verbosity == 1: logger.setLevel(logging.WARNING)
+  elif verbosity >= 2: logger.setLevel(logging.INFO)
+  elif verbosity >= 3: logger.setLevel(logging.DEBUG)
+
+  return logger
 
 
 def _jpeg_read_creation_date(path):
@@ -282,10 +342,13 @@ def copy(src, base, dst, fmt, move, dry):
 
   """
 
+  if _ignore_file(os.path.dirname(src), os.path.basename(src)):
+    raise RuntimeError('ignoring file %s - explicit ignore'  % src)
+
   # 1. determines if file is something we need to take care of
   if os.path.splitext(src)[1].lower() not in EXTENSIONS:
-    logger.warn("Ignoring %s (not in extension list)" % src)
-    return
+    raise UnsupportedExtensionError('ignoring file %s - extension not ' \
+        'supported' % src)
 
   # 2. figures out when the file was produced
   date = read_creation_date(src)
@@ -355,8 +418,21 @@ def rcopy(base, dst, fmt, move, dry):
 
   good, bad = [], []
 
-  for path, dirs, files in os.walk(base, topdown=False):
+  for path, dirs, files in os.walk(base, topdown=True):
+    # ignore hidden directories
+    keep = []
+    for d in dirs:
+      if _ignore_dir(d):
+        logger.info('ignoring %s...' % os.path.join(path, d))
+        continue
+      keep.append(d)
+    dirs[:] = keep
     for f in files:
+      if _ignore_file(path, f):
+        logger.info('ignoring %s...' % os.path.join(path, f))
+        continue
+      if f.startswith('.'):
+        logger.info('ignoring %s...' % os.path.join(path, f))
       try:
         good.append(copy(os.path.join(path, f), base, dst, fmt, move, dry))
       except Exception as e:
@@ -404,7 +480,8 @@ class Email(object):
   def message(self):
     '''Returns a string representation of the message'''
 
-    return self.msg.as_bytes()
+    return self.msg.as_string()
+
 
 
 class Handler(watchdog.events.PatternMatchingEventHandler):
@@ -510,27 +587,29 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     # compose e-mail
     if not self.good:
-      subject = '[orquidea/photo] Warning: %d files need manual organization!'
+      subject = '[orquidea/photo] %(good_len)d files may need manual intervention'
     else:
-      subject = '[orquidea/photo] organized %d files for you'
+      subject = '[orquidea/photo] Organized %(good_len)d files for you'
 
     body = 'Hello,\n' \
         '\n' \
         'This is an automated message that summarizes actions I performed ' \
         'at folder\n %(base)s for you.\n' \
-        '\n' \
-        'List of files correctly moved (%(good_len)s):\n' \
         '\n'
 
-    body += '\n'.join(self.good) + \
-        '\n' \
-        'List of files that could NOT be moved (%(bad_len)s):\n' \
-        '\n'
-    body += '\n'.join(self.bad) + '\n'
+    if self.good:
+      body += 'List of files correctly moved (%(good_len)d):\n\n'
+      body += '\n'.join(self.good) + '\n\n'
+    else:
+      body += 'No files moved\n\n'
 
-    body += 'That is it, have a good day!\n' \
-        '\n' \
-        'Your faithul robot\n'
+    if self.bad:
+      body += 'List of files that could NOT be moved (%(bad_len)d):\n\n'
+      body += '\n'.join(self.bad) + '\n\n'
+    else:
+      body += 'No files with issues\n\n'
+
+    body += 'That is it, have a good day!\n\nYour faithul robot\n'
 
     body = body % dict(
         base=self.base,
@@ -592,12 +671,12 @@ class Sorter(object):
     email = self.handler.write_email()
 
     if self.email:
+      logger.debug(email.message())
       email.send()
-      logger.debug(email.as_string())
     else:
-      logger.info(email.as_string())
+      logger.info(email.message())
 
-    self.hander.reset()
+    self.handler.reset()
 
 
   def start(self):

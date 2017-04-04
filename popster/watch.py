@@ -49,9 +49,6 @@ import os
 import sys
 import time
 
-import logging
-logger = logging.getLogger(__name__)
-
 
 def main(user_input=None):
 
@@ -74,9 +71,8 @@ def main(user_input=None):
       version=completions['version'],
       )
 
-  # setup logging
-  if args['--verbose'] == 1: logger.setLevel(logging.INFO)
-  elif args['--verbose'] >= 2: logger.setLevel(logging.DEBUG)
+  from .sorter import setup_logger
+  logger = setup_logger('popster', args['--verbose'])
 
   from .sorter import Sorter
   the_sorter = Sorter(
@@ -89,6 +85,9 @@ def main(user_input=None):
       idleness=int(args['--idleness']),
       )
 
+  logger.info("Watching for photos/movies on: %s", args['--source'])
+  logger.info("Moving photos/movies to: %s", args['--dest'])
+  logger.info("Folder format set to: %s", args['--folder-format'])
   the_sorter.start()
   try:
     while True:
