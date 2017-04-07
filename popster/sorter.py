@@ -37,13 +37,39 @@ EXTENSIONS=[
 def _ignore_dir(d):
   """Select directories that should be ignored"""
 
-  return d.startswith('.') or d in ('MISC', 'CANONMSC')
+  return d.startswith('.')
+
+
+def _erase_dir(d):
+  """Select directories that should be erased"""
+
+  return d in ('MISC', 'CANONMSC')
+
+
+def _rmtree(d, dry):
+  """Removes a directory recursively
+
+  Parameters:
+
+    d (str): Full path to the directory to remove
+    dry (bool): If set to ``True``, then it will not remove anything, just log.
+
+
+  Returns:
+
+    str: ``d``, if successful
+
+  """
+
+  logger.info("- %s/" % d)
+  if not dry: shutil.rmtree(d)
+  return d
 
 
 def _ignore_file(path, f):
   """Select files that should be ignored"""
 
-  if f in ('.DS_Store', '.Icon'): return True
+  if f in ('.DS_Store', '.Icon') or f.startswith('.'): return True
 
   for p in path.split(os.sep):
     if _ignore_dir(p): return True
@@ -258,7 +284,7 @@ def _make_dirs(path, name, dry):
     except OSError as exception:
       if exception.errno != errno.EEXIST: raise
     else:
-      logger.info("Created directory %s" % retval)
+      logger.info("mkdir %s/" % retval)
 
   return retval
 
@@ -294,7 +320,7 @@ def _copy_file(src, dst, move, dry):
     logger.info("chmod %s %s" % (oct(perms), dst))
 
 
-def copy(src, base, dst, fmt, move, dry):
+def copy(src, dst, fmt, move, dry):
   """Copies a single source file to a destination directory
 
   This function performs 4 distinct tasks:
@@ -302,17 +328,13 @@ def copy(src, base, dst, fmt, move, dry):
     1. Determines if file has a supported extension, otherwise ignores it
     2. Figures out when the file was produced
     3. Moves file to destination directory
-    4. Checks originating directory - if empty, suppress it up to ``base``
 
 
   Parameters:
 
     src (str): The path leading to the source object that must exist
 
-    base (str): The path leading to the base directory that is being monitored.
-      This value is provided so we don't accidentally erase it.
-
-    dst (str): A path leading to the base destination directory where to store
+    dst (str): A path leading to the root destination directory where to store
       pictures. If the path does not exist, it will be created.
 
     fmt (str): A string containing date formatters for a **folder** structure
@@ -366,15 +388,6 @@ def copy(src, base, dst, fmt, move, dry):
 
   _copy_file(src, dst_filename, move, dry)
 
-  # 4. check originating directory - if empty, suppress it up to ``base``
-  base = os.path.realpath(base)
-  src = os.path.dirname(os.path.realpath(src))
-  while (not os.listdir(src)) and (not os.path.samefile(src, base)):
-    if not dry:
-      os.rmdir(src)
-    logger.info("rmdir %s" % src)
-    src = os.path.dirname(src)
-
   return dst_filename
 
 
@@ -419,22 +432,28 @@ def rcopy(base, dst, fmt, move, dry):
   good, bad = [], []
 
   for path, dirs, files in os.walk(base, topdown=True):
-    # ignore hidden directories
+
+    # ignore hidden directories, erase useless directories from camera
+    # ignore any further interaction with those
     keep = []
     for d in dirs:
       if _ignore_dir(d):
         logger.info('ignoring %s...' % os.path.join(path, d))
         continue
+      if _erase_dir(d):
+        dirpath = os.path.join(path, d)
+        logger.info('rm -rf %s...' % dirpath)
+        _rmtree(dirpath, dry)
+        continue
       keep.append(d)
-    dirs[:] = keep
+    dirs[:] = keep # effectively prunes os.walk() - see manual
+
     for f in files:
       if _ignore_file(path, f):
         logger.info('ignoring %s...' % os.path.join(path, f))
         continue
-      if f.startswith('.'):
-        logger.info('ignoring %s...' % os.path.join(path, f))
       try:
-        good.append(copy(os.path.join(path, f), base, dst, fmt, move, dry))
+        good.append(copy(os.path.join(path, f), dst, fmt, move, dry))
       except Exception as e:
         logger.warn('could not copy/move %s to new destination: %s', path, e)
         bad.append(os.path.join(path, f))
@@ -558,8 +577,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     try:
       self.last_activity = time.time() #log before starting
-      self.good.append(copy(event.src_path, self.base, self.dst, self.fmt,
-        self.move, self.dry))
+      self.good.append(copy(event.src_path, self.dst, self.fmt, self.move,
+        self.dry))
     except Exception as e:
       logger.warn('could not copy/move %s to new destination: %s',
           event.src_path, e)
@@ -569,7 +588,14 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
 
   def reset(self):
-    '''Reset accumulated good/bad lists'''
+    '''Reset accumulated good/bad lists, removes empty directories'''
+
+    for path, dirs, files in os.walk(self.base, topdown=False):
+      for d in dirs:
+        dirpath = os.path.join(path, d)
+        if not os.listdir(dirpath):
+          logger.info("rmdir %s" % dirpath)
+          if not self.dry: os.rmdir(dirpath)
 
     self.good = []
     self.bad = []
@@ -657,7 +683,7 @@ class Sorter(object):
 
 
   def email_check(self):
-    '''Checks if needs to send e-mail, of so, do it'''
+    '''Checks if needs to send e-mail, and if so, do it'''
 
     # if there seems to be activity on the handler (this means file system
     # events are still happening), then wait more
@@ -680,7 +706,7 @@ class Sorter(object):
 
 
   def start(self):
-    '''Runs the watchdog loop, interrupts with signal or CTRL-C'''
+    '''Runs the watchdog loop'''
 
     self.observer.schedule(self.handler, self.handler.base, recursive=True)
     self.observer.start()
@@ -696,3 +722,5 @@ class Sorter(object):
     '''Joins the sorting thread'''
 
     self.observer.join()
+    self.email_check()
+    self.handler.reset()

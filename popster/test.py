@@ -65,9 +65,9 @@ def test_move():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=True, dry=False)
+    result = copy(src, dst, fmt, move=True, dry=False)
     assert os.path.exists(result)
-    assert not os.path.exists(subfolder) #removed
+    assert os.path.exists(subfolder) #not removed
     assert os.path.exists(base) #not removed
 
 
@@ -85,9 +85,9 @@ def test_move_fails():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=True, dry=False)
+    result = copy(src, dst, fmt, move=True, dry=False)
     assert os.path.exists(result)
-    assert not os.path.exists(subfolder) #removed
+    assert os.path.exists(subfolder) #not removed
     assert os.path.exists(base) #not removed
 
 
@@ -104,9 +104,9 @@ def test_move_dry():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=True, dry=True)
+    result = copy(src, dst, fmt, move=True, dry=True)
     assert os.path.exists(subfolder) #removed
-    assert not os.path.exists(result)
+    assert not os.path.exists(result) #not created
 
 
 def test_copy():
@@ -122,7 +122,7 @@ def test_copy():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=False, dry=False)
+    result = copy(src, dst, fmt, move=False, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder)
 
@@ -140,11 +140,11 @@ def test_copy_same():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result1 = copy(src, base, dst, fmt, move=False, dry=False)
+    result1 = copy(src, dst, fmt, move=False, dry=False)
     assert os.path.exists(result1)
     assert os.path.exists(subfolder)
     # do it again
-    result2 = copy(src, base, dst, fmt, move=False, dry=False)
+    result2 = copy(src, dst, fmt, move=False, dry=False)
     assert os.path.exists(result2)
     assert result1 != result2
     assert result2.endswith('+.jpg')
@@ -165,7 +165,7 @@ def test_copy_fails():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=False, dry=False)
+    result = copy(src, dst, fmt, move=False, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder)
 
@@ -183,7 +183,7 @@ def test_copy_dry():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, base, dst, fmt, move=False, dry=True)
+    result = copy(src, dst, fmt, move=False, dry=True)
     assert os.path.exists(subfolder)
     assert not os.path.exists(result)
 
@@ -267,8 +267,8 @@ def test_move_all():
       assert not os.path.exists(k), '%r still exists' % k
 
     # asserts the original directory is removed up to, but excluding, src
-    assert not os.path.exists(src)
-    assert os.path.exists(base)
+    assert os.path.exists(src), '%r does not exist' % src
+    assert os.path.exists(base), '%r does not exist' % base
 
 
 def test_watch():
@@ -421,5 +421,5 @@ def test_start_with_files():
       assert not os.path.exists(k), '%r still exists' % k
 
     # asserts the original directory is removed up to, but excluding, src
-    assert not os.path.exists(src)
-    assert os.path.exists(base)
+    assert not os.path.exists(src), '%r still exists' % src
+    assert os.path.exists(base), '%r does not exist' % base
