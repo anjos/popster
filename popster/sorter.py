@@ -594,8 +594,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
       for d in dirs:
         dirpath = os.path.join(path, d)
         if not os.listdir(dirpath):
-          logger.info("rmdir %s" % dirpath)
-          if not self.dry: os.rmdir(dirpath)
+          logger.info("rm -rf %s" % dirpath)
+          if not self.dry: shutil.rmtree(dirpath)
 
     self.good = []
     self.bad = []
