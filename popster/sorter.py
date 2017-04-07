@@ -61,15 +61,29 @@ def _rmtree(d, dry):
 
   """
 
-  logger.info("- %s/" % d)
+  logger.info("rm -rf %s/" % d)
   if not dry: shutil.rmtree(d)
   return d
+
+
+def _erase_file(f):
+  """Select files that should be erased"""
+
+  return f in ('.DS_Store',)
+
+
+def _rmfile(f, dry):
+  """Removes a file"""
+
+  logger.info("rm -f %s" % f)
+  if not dry: os.unlink(f)
+  return f
 
 
 def _ignore_file(path, f):
   """Select files that should be ignored"""
 
-  if f in ('.DS_Store', '.Icon') or f.startswith('.'): return True
+  if f in ('.Icon',) or f.startswith('.'): return True
 
   for p in path.split(os.sep):
     if _ignore_dir(p): return True
@@ -442,7 +456,6 @@ def rcopy(base, dst, fmt, move, dry):
         continue
       if _erase_dir(d):
         dirpath = os.path.join(path, d)
-        logger.info('rm -rf %s...' % dirpath)
         _rmtree(dirpath, dry)
         continue
       keep.append(d)
@@ -451,6 +464,10 @@ def rcopy(base, dst, fmt, move, dry):
     for f in files:
       if _ignore_file(path, f):
         logger.info('ignoring %s...' % os.path.join(path, f))
+        continue
+      if _erase_file(f):
+        filepath = os.path.join(path, f)
+        _rmfile(filepath, dry)
         continue
       try:
         good.append(copy(os.path.join(path, f), dst, fmt, move, dry))
@@ -593,9 +610,16 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     for path, dirs, files in os.walk(self.base, topdown=False):
       for d in dirs:
         dirpath = os.path.join(path, d)
-        if not os.listdir(dirpath):
-          logger.info("rm -rf %s" % dirpath)
-          if not self.dry: shutil.rmtree(dirpath)
+        contents = [k for k in os.listdir(dirpath) \
+            if not (_ignore_dir(k) or _ignore_file(dirpath, k) or \
+              _erase_dir(k) or _erase_file(k))]
+        if not contents:
+          _rmtree(dirpath, self.dry)
+      for f in files:
+        if _erase_file(f):
+          filepath = os.path.join(path, f)
+          _rmfile(filepath, self.dry)
+
 
     self.good = []
     self.bad = []
