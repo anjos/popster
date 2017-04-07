@@ -519,6 +519,29 @@ class Email(object):
     return self.msg.as_string()
 
 
+class WatchdogLogger(watchdog.events.FileSystemEventHandler):
+  """Logs all the events captured."""
+
+  def on_moved(self, event):
+    super(LoggingEventHandler, self).on_moved(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.info("Moved %s: from %s to %s", what, event.src_path, event.dest_path)
+
+  def on_created(self, event):
+    super(LoggingEventHandler, self).on_created(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.info("Created %s: %s", what, event.src_path)
+
+  def on_deleted(self, event):
+    super(LoggingEventHandler, self).on_deleted(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.info("Deleted %s: %s", what, event.src_path)
+
+  def on_modified(self, event):
+    super(LoggingEventHandler, self).on_modified(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.info("Modified %s: %s", what, event.src_path)
+
 
 class Handler(watchdog.events.PatternMatchingEventHandler):
   '''Handles file moving/copying
@@ -559,7 +582,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.dry = dry
 
     # sets up a basic logger
-    self.logger = watchdog.events.LoggingEventHandler()
+    self.logger = WatchdogLogger()
 
     # cleans-up before we start to watch, sets-up good/bad lists
     self.good, self.bad = rcopy(base, dst, fmt, move, dry)
