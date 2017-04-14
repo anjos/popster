@@ -147,7 +147,7 @@ def test_copy_same():
     result2 = copy(src, dst, fmt, move=False, dry=False)
     assert os.path.exists(result2)
     assert result1 != result2
-    assert result2.endswith('+.jpg')
+    assert result2.endswith('~.jpg')
     assert os.path.exists(subfolder)
 
 
@@ -295,7 +295,7 @@ def test_watch():
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=10)
+        idleness=1)
     sorter.start()
 
     # simulates copying (creating) data into the base directory
@@ -347,7 +347,7 @@ def test_watch_move():
       TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=10)
+        idleness=1)
     sorter.start()
 
     # simulates moving data into the base directory
@@ -406,7 +406,7 @@ def test_start_with_files():
       os.unlink(os.path.join(base, k))
 
     sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=10)
+        idleness=1)
     sorter.start()
 
     time.sleep(1)

@@ -149,7 +149,7 @@ def setup_logger(name, verbosity):
 
   logger.setLevel(logging.ERROR)
   if verbosity == 1: logger.setLevel(logging.WARNING)
-  elif verbosity >= 2: logger.setLevel(logging.INFO)
+  elif verbosity == 2: logger.setLevel(logging.INFO)
   elif verbosity >= 3: logger.setLevel(logging.DEBUG)
 
   return logger
@@ -303,6 +303,27 @@ def _make_dirs(path, name, dry):
   return retval
 
 
+def _remove_osx_locks(f, dry):
+  """Checks if the file ``f`` has any OS X locks and remove them
+
+
+  Parameters:
+
+    f (str): The path leading to the file that will be checked and, eventually,
+      unlocked
+    dry (bool): If set to ``True``, just show what it would do
+
+  """
+
+  curr_stat = os.stat(f)
+  if not hasattr(curr_stat, 'st_flags'): return #not on OS X
+  curr_flags = curr_stat.st_flags
+  if (curr_flags & stat.UF_IMMUTABLE) or (curr_flags & stat.SF_IMMUTABLE):
+    new_flags = curr_flags & ~stat.UF_IMMUTABLE & ~stat.SF_IMMUTABLE
+    logger.info('lchflags %s %s', oct(new_flags), f)
+    if not dry: os.chflags(f, new_flags)
+
+
 def _copy_file(src, dst, move, dry):
   """Copies file and sets permissions and ownership to meet parent directory
 
@@ -320,10 +341,11 @@ def _copy_file(src, dst, move, dry):
 
   if not dry:
     if move:
+      _remove_osx_locks(src, dry)
       shutil.move(src, dst)
     else:
       shutil.copyfile(src, dst)
-  logger.info("%s -> %s" % (src, dst))
+  logger.info("%s -> %s", src, dst)
 
   if not dry:
     parent = os.path.dirname(dst)
@@ -331,7 +353,7 @@ def _copy_file(src, dst, move, dry):
     os.chown(dst, info.st_uid, info.st_gid)
     perms = info.st_mode & FILEMASK
     os.chmod(dst, perms)
-    logger.info("chmod %s %s" % (oct(perms), dst))
+    logger.info("chmod %s %s", oct(perms), dst)
 
 
 def copy(src, dst, fmt, move, dry):
@@ -396,9 +418,9 @@ def copy(src, dst, fmt, move, dry):
 
   # if a file with the same name exists, recalls myself with a "+" added to
   # the destination filename
-  if os.path.exists(dst_filename):
+  while os.path.exists(dst_filename):
     dst_filename,e = os.path.splitext(dst_filename)
-    dst_filename += '+' + e
+    dst_filename += '~' + e
 
   _copy_file(src, dst_filename, move, dry)
 
@@ -472,7 +494,8 @@ def rcopy(base, dst, fmt, move, dry):
       try:
         good.append(copy(os.path.join(path, f), dst, fmt, move, dry))
       except Exception as e:
-        logger.warn('could not copy/move %s to new destination: %s', path, e)
+        action = 'copy' if not move else 'move'
+        logger.warn('could not %s %s to new destination: %s', action, path, e)
         bad.append(os.path.join(path, f))
 
   return good, bad
@@ -519,30 +542,6 @@ class Email(object):
     return self.msg.as_string()
 
 
-class WatchdogLogger(watchdog.events.FileSystemEventHandler):
-  """Logs all the events captured."""
-
-  def on_moved(self, event):
-    super(LoggingEventHandler, self).on_moved(event)
-    what = 'directory' if event.is_directory else 'file'
-    logger.info("Moved %s: from %s to %s", what, event.src_path, event.dest_path)
-
-  def on_created(self, event):
-    super(LoggingEventHandler, self).on_created(event)
-    what = 'directory' if event.is_directory else 'file'
-    logger.info("Created %s: %s", what, event.src_path)
-
-  def on_deleted(self, event):
-    super(LoggingEventHandler, self).on_deleted(event)
-    what = 'directory' if event.is_directory else 'file'
-    logger.info("Deleted %s: %s", what, event.src_path)
-
-  def on_modified(self, event):
-    super(LoggingEventHandler, self).on_modified(event)
-    what = 'directory' if event.is_directory else 'file'
-    logger.info("Modified %s: %s", what, event.src_path)
-
-
 class Handler(watchdog.events.PatternMatchingEventHandler):
   '''Handles file moving/copying
 
@@ -581,33 +580,51 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.move = move
     self.dry = dry
 
-    # sets up a basic logger
-    self.logger = WatchdogLogger()
-
-    # cleans-up before we start to watch, sets-up good/bad lists
-    self.good, self.bad = rcopy(base, dst, fmt, move, dry)
+    from threading import RLock
+    self.queue_lock = RLock()
+    self.queue = set()
+    self.good = []
+    self.bad = []
     self.last_activity = time.time()
 
+    # queues all existing files
+    self.queue_existing()
 
-  def on_any_event(self, event):
-    '''Catch-all event handler
 
+  def queue_existing(self):
+    '''Queues existing files on start-up'''
 
-    Parameters:
+    for path, dirs, files in os.walk(self.base, topdown=True):
 
-      event (watchdog.events.FileSystemEvent): Event corresponding to the
-        event that occurred with a specific file or directory being observed
+      # ignore hidden directories, erase useless directories from camera
+      # ignore any further interaction with those
+      keep = []
+      for d in dirs:
+        if _ignore_dir(d):
+          logger.info('ignoring %s...' % os.path.join(path, d))
+          continue
+        if _erase_dir(d):
+          logger.info('ignoring %s...' % os.path.join(path, d))
+          continue
+        keep.append(d)
+      dirs[:] = keep # effectively prunes os.walk() - see manual
 
-    '''
+      for f in files:
+        if _ignore_file(path, f):
+          logger.info('ignoring %s...' % os.path.join(path, f))
+          continue
+        if _erase_file(f):
+          logger.info('ignoring %s...' % os.path.join(path, f))
+          continue
 
-    self.logger.on_any_event(event)
-    self.last_activity = time.time()
+        with self.queue_lock: self.queue.add(os.path.join(path, f))
+        logger.debug('queuing file %s...' % os.path.join(path, f))
+        self.last_activity = time.time()
 
 
   def on_created(self, event):
     '''Called when a file or directory is created
 
-
     Parameters:
 
       event (watchdog.events.FileSystemEvent): Event corresponding to the
@@ -615,16 +632,38 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     '''
 
-    try:
-      self.last_activity = time.time() #log before starting
-      self.good.append(copy(event.src_path, self.dst, self.fmt, self.move,
-        self.dry))
-    except Exception as e:
-      logger.warn('could not copy/move %s to new destination: %s',
-          event.src_path, e)
-      self.bad.append(event.src_path)
-    finally:
-      self.last_activity = time.time()
+    super(Handler, self).on_created(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.debug("[watchdog] created %s: %s", what, event.src_path)
+    with self.queue_lock: self.queue.add(event.src_path)
+    self.last_activity = time.time()
+
+
+  def on_moved(self, event):
+    super(Handler, self).on_moved(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.debug("[watchdog] moved %s: from %s to %s", what, event.src_path,
+        event.dest_path)
+
+
+  def on_deleted(self, event):
+    super(Handler, self).on_deleted(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.debug("[watchdog] deleted %s: %s", what, event.src_path)
+    with self.queue_lock:
+      try:
+        self.queue.remove(event.src_path)
+      except KeyError:
+        pass
+    self.last_activity = time.time()
+
+
+  def on_modified(self, event):
+    super(Handler, self).on_modified(event)
+    what = 'directory' if event.is_directory else 'file'
+    logger.debug("[watchdog] modified %s: %s", what, event.src_path)
+    with self.queue_lock: self.queue.add(event.src_path)
+    self.last_activity = time.time()
 
 
   def reset(self):
@@ -643,16 +682,38 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
           filepath = os.path.join(path, f)
           _rmfile(filepath, self.dry)
 
-
     self.good = []
     self.bad = []
+    self.queue = set()
     self.last_activity = time.time()
 
 
   def needs_clearing(self):
     '''Returns ``True`` if this handler has accumulated outputs'''
 
-    return bool(self.good or self.bad)
+    return bool(self.queue or self.good or self.bad)
+
+
+  def process_queue(self):
+    '''Process queued events'''
+
+    if not self.queue: return
+
+    logger.debug('Processing queue with %d elements', len(self.queue))
+
+    with self.queue_lock:
+      # we copy the queue locally, we relesae the lock and reset the queue
+      local_queue = list(self.queue)
+      self.queue = set()
+
+    # process local queue copy - deletions are no longer possible
+    for path in local_queue:
+      try:
+        self.good.append(copy(path, self.dst, self.fmt, self.move, self.dry))
+      except Exception as e:
+        action = 'copy' if not self.move else 'move'
+        logger.warn('could not %s %s to new destination: %s', action, path, e)
+        self.bad.append(path)
 
 
   def write_email(self):
@@ -667,7 +728,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     body = 'Hello,\n' \
         '\n' \
         'This is an automated message that summarizes actions I performed ' \
-        'at folder\n %(base)s for you.\n' \
+        'at folder\n"%(base)s" for you.\n' \
         '\n'
 
     if self.good:
@@ -680,15 +741,18 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
       body += 'List of files that could NOT be moved (%(bad_len)d):\n\n'
       body += '\n'.join(self.bad) + '\n\n'
     else:
-      body += 'No files with issues\n\n'
+      body += 'No problems found!\n\n'
 
     body += 'That is it, have a good day!\n\nYour faithul robot\n'
 
-    body = body % dict(
+    completions = dict(
         base=self.base,
         good_len=len(self.good),
         bad_len=len(self.bad),
         )
+
+    body = body % completions
+    subject = subject % completions
 
     email = Email(subject, body)
     return email
@@ -729,18 +793,27 @@ class Sorter(object):
     self.idleness = idleness
 
 
-  def email_check(self):
+  def check_point(self):
     '''Checks if needs to send e-mail, and if so, do it'''
+
+    idleness = time.time() - self.handler.last_activity
+    logger.debug('Check-point (idle for %d seconds)', idleness)
 
     # if there seems to be activity on the handler (this means file system
     # events are still happening), then wait more
-    should_check = (time.time() - self.handler.last_activity) > self.idleness
+    should_check =  idleness > self.idleness
     if not should_check: return
     self.handler.last_activity = time.time()
 
-    # if there is nothing to report, skip
-    if not self.handler.needs_clearing(): return
+    logger.debug('Running full check (idle for %d > %d seconds)', idleness,
+        self.idleness)
 
+    # if there is nothing to report, skip
+    if not self.handler.needs_clearing():
+      logger.debug('Queues are empty, nothing to report...')
+      return
+
+    self.handler.process_queue()
     email = self.handler.write_email()
 
     if self.email:
@@ -769,5 +842,5 @@ class Sorter(object):
     '''Joins the sorting thread'''
 
     self.observer.join()
-    self.email_check()
+    self.check_point()
     self.handler.reset()

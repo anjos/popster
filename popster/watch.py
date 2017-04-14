@@ -18,8 +18,8 @@ Options:
                               going to be stored [default: %%Y/%%B/%%d.%%m.%%Y]
   -n, --dry-run               If set, just tell what it would do instead of
                               doing it. This flag is good for testing.
-  -e, --email                 If set, e-mail agents responsible every minute
-                              about status
+  -e, --email                 If set, e-mail agents responsible every time
+                              action occurs
   -s, --source=<path>         Path leading to the folder to watch for
                               photographs to import
                               [default: /share/Download/SmartImport]
@@ -27,6 +27,9 @@ Options:
                               [default: /share/Pictures/Para Organizar]
   -c, --copy                  Copy instead of moving files from the source
                               folder (this will be a bit slower).
+  -p, --check-point=<secs>    Number of seconds to wait before each check. This
+                              number should be smaller than the idleness
+                              setting. [default: 10]
   -i, --idleness=<secs>       Number of seconds to wait until no more activity
                               is registered and before it can dispatch summary
                               e-mails [default: 60]
@@ -71,10 +74,22 @@ def main(user_input=None):
       version=completions['version'],
       )
 
-  from .sorter import setup_logger
+  from .sorter import setup_logger, Sorter
   logger = setup_logger('popster', args['--verbose'])
 
-  from .sorter import Sorter
+  logger.info("Watching for photos/movies on: %s", args['--source'])
+  logger.info("Moving photos/movies to: %s", args['--dest'])
+  logger.info("Folder format set to: %s", args['--folder-format'])
+  logger.info("Checkpoint timeout: %s seconds", args['--check-point'])
+  logger.info("Idle time set to: %s seconds", args['--idleness'])
+  if args['--email']:
+    logger.info("Sending **real** e-mails")
+  else:
+    logger.info("Only logging e-mails, **not** sending anthing")
+
+  check_point = int(args['--check-point'])
+  idleness = int(args['--idleness'])
+
   the_sorter = Sorter(
       base=args['--source'],
       dst=args['--dest'],
@@ -82,17 +97,14 @@ def main(user_input=None):
       move=not(args['--copy']),
       dry=args['--dry-run'],
       email=args['--email'],
-      idleness=int(args['--idleness']),
+      idleness=idleness,
       )
 
-  logger.info("Watching for photos/movies on: %s", args['--source'])
-  logger.info("Moving photos/movies to: %s", args['--dest'])
-  logger.info("Folder format set to: %s", args['--folder-format'])
   the_sorter.start()
   try:
     while True:
-      time.sleep(1)
-      the_sorter.email_check()
+      time.sleep(check_point)
+      the_sorter.check_point()
   except KeyboardInterrupt:
     the_sorter.stop()
   the_sorter.join()
