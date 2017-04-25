@@ -94,7 +94,7 @@ def _ignore_file(path, f):
 EMAIL_SENDER = 'Andre Anjos <andre.dos.anjos@gmail.com>'
 EMAIL_RECEIVERS = [
     'Andre Anjos <andre.dos.anjos@gmail.com>',
-    #'Ana Carolina Anjos <ana.carolina.anjos@gmail.com>',
+    'Ana Carolina Anjos <ana.carolina.anjos@gmail.com>',
     ]
 """E-mail sender and receivers for informative actions"""
 
