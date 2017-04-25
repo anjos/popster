@@ -12,6 +12,7 @@ import errno
 import shutil
 import datetime
 import platform
+import subprocess
 
 import logging
 logger = logging.getLogger(__name__)
@@ -20,7 +21,6 @@ from PIL import Image, ExifTags
 from pymediainfo import MediaInfo
 import watchdog.events
 import watchdog.observers
-import smtplib
 
 
 EXTENSIONS=[
@@ -110,6 +110,11 @@ class DateReadoutError(IOError):
 
 class UnsupportedExtensionError(IOError):
   """Exception raised in case :py:func:`read_creation_date` does not support the extension on file being read"""
+  pass
+
+
+class ExplicitIgnore(RuntimeError):
+  """Exception raised in case :py:func:`copy` explicitly ignores a file"""
   pass
 
 
@@ -401,12 +406,11 @@ def copy(src, dst, fmt, move, dry):
   """
 
   if _ignore_file(os.path.dirname(src), os.path.basename(src)):
-    raise RuntimeError('ignoring file %s - explicit ignore'  % src)
+    raise ExplicitIgnore(src)
 
   # 1. determines if file is something we need to take care of
   if os.path.splitext(src)[1].lower() not in EXTENSIONS:
-    raise UnsupportedExtensionError('ignoring file %s - extension not ' \
-        'supported' % src)
+    raise UnsupportedExtensionError(src)
 
   # 2. figures out when the file was produced
   date = read_creation_date(src)
@@ -493,6 +497,14 @@ def rcopy(base, dst, fmt, move, dry):
         continue
       try:
         good.append(copy(os.path.join(path, f), dst, fmt, move, dry))
+      except ExplicitIgnore as e:
+        action = 'copy' if not self.move else 'move'
+        logger.debug('explicitly ignoring file during %s operation: %s', e,
+            action)
+      except UnsupportedExtensionError as e:
+        action = 'copy' if not self.move else 'move'
+        logger.debug('ignoring file during %s operation - unsupported ext: %s',
+            e, action)
       except Exception as e:
         action = 'copy' if not move else 'move'
         logger.warn('could not %s %s to new destination: %s', action, path, e)
@@ -529,11 +541,15 @@ class Email(object):
 
 
   def send(self):
-    '''Sends message'''
+    '''Sends message using the sendmail binary (no other way on QNAP)'''
 
-    s = smtplib.SMTP('localhost')
-    s.send_message(self.sender, self.to, self.msg.as_string())
-    s.quit()
+    if os.path.exists('/opt/sbin/sendmail'):
+      sendmail = '/opt/sbin/sendmail'
+    else:
+      sendmail = '/usr/sbin/sendmail'
+
+    p = subprocess.Popen([sendmail, "-t", "-oi"], stdin=subprocess.PIPE)
+    p.communicate(self.msg.as_bytes())
 
 
   def message(self):
@@ -710,6 +726,14 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     for path in local_queue:
       try:
         self.good.append(copy(path, self.dst, self.fmt, self.move, self.dry))
+      except ExplicitIgnore as e:
+        action = 'copy' if not self.move else 'move'
+        logger.debug('explicitly ignoring file during %s operation: %s', e,
+            action)
+      except UnsupportedExtensionError as e:
+        action = 'copy' if not self.move else 'move'
+        logger.debug('ignoring file during %s operation - unsupported ext: %s',
+            e, action)
       except Exception as e:
         action = 'copy' if not self.move else 'move'
         logger.warn('could not %s %s to new destination: %s', action, path, e)
