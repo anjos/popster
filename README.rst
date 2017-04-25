@@ -43,6 +43,21 @@ There is a single program that you can launch as a daemon on your system::
 
 And a complete help message will be displayed.
 
+.. note::
+
+   Sending e-mail requires you to make the application ``sendmail`` functional.
+   There are 2 possibilities:
+
+   1. You succeed in configuring the SSMTP client available on the QNAP server,
+      by editing the file ``/etc/default_config/ssmtp/ssmtp.conf``. There are
+      some good tutorials on the internet on how to configure SSMTP. For
+      example, checkout `this one on the Ubuntu website
+      <https://help.ubuntu.com/community/EmailAlerts>`_
+   2. You have `Entware <https://github.com/Entware-ng/Entware-ng>`_ installed
+      and install the package ``msmtp``, which fulfills the same role. Make
+      sure to either have a ``.msmtprc`` file on your account, or access to the
+      global ``/opt/etc/msmtprc`` file.
+
 
 Development
 -----------
