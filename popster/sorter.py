@@ -17,7 +17,7 @@ import subprocess
 import logging
 logger = logging.getLogger(__name__)
 
-from PIL import Image, ExifTags
+import exifread
 from pymediainfo import MediaInfo
 import watchdog.events
 import watchdog.observers
@@ -25,6 +25,7 @@ import watchdog.observers
 
 EXTENSIONS=[
     '.jpg',
+    '.cr2', #canon raw images (mostly tiff with exif)
     '.thm', #thumbnail files, with exif information (little jpg)
     '.avi', #older cameras
     '.mp4', #canon powershot g7 x mark ii
@@ -186,8 +187,9 @@ def _jpeg_read_creation_date(path):
   """
 
   try:
-    return datetime.datetime.strptime(Image.open(path)._getexif()[36867],
-        '%Y:%m:%d %H:%M:%S')
+    tags = exifread.process_file(path, details=False, stop_tag='DateTimeOriginal')
+    return datetime.datetime.strptime(tags['DateTimeOriginal'], '%Y:%m:%d
+        %H:%M:%S')
   except Exception as e:
     raise DateReadoutError(str(e))
 
@@ -226,6 +228,7 @@ def _video_read_creation_date(path):
 
 CREATION_DATE_READER={
     '.jpg': _jpeg_read_creation_date,
+    '.cr2': _jpeg_read_creation_date,
     '.thm': _jpeg_read_creation_date,
     '.avi': _video_read_creation_date,
     '.mp4': _video_read_creation_date,
