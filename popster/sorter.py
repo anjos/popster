@@ -187,9 +187,11 @@ def _jpeg_read_creation_date(path):
   """
 
   try:
-    tags = exifread.process_file(path, details=False, stop_tag='DateTimeOriginal')
-    return datetime.datetime.strptime(tags['DateTimeOriginal'], '%Y:%m:%d
-        %H:%M:%S')
+    with open(path, 'rb') as f:
+      tags = exifread.process_file(f, details=False,
+          stop_tag='EXIF DateTimeOriginal')
+      return datetime.datetime.strptime(tags['EXIF DateTimeOriginal'].printable,
+          '%Y:%m:%d %H:%M:%S')
   except Exception as e:
     raise DateReadoutError(str(e))
 
