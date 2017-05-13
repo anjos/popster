@@ -750,7 +750,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     # compose e-mail
     if not self.good:
-      subject = '[orquidea/photo] %(good_len)d files may need manual intervention'
+      subject = '[orquidea/photo] %(bad_len)d files may need manual intervention'
     else:
       subject = '[orquidea/photo] Organized %(good_len)d files for you'
 
