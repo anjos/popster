@@ -1,6 +1,6 @@
 {% set name="pymediainfo" %}
-{% set version="2.1.6" %}
-{% set md5="7c95bf1297b77d6ee1c5a0345377635c" %}
+{% set version="2.1.9" %}
+{% set md5="993428f64822c9826ccec0108d6edc0c" %}
 
 package:
   name: {{ name | lower }}
