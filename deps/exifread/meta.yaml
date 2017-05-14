@@ -1,0 +1,37 @@
+{% set name = "ExifRead" %}
+{% set version = "2.1.2" %}
+{% set hash_type = "md5" %}
+{% set hash = "8f5099e11e2137e0ce5acbec91c219be" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  fn: {{ name }}-{{ version }}.tar.gz
+  url: https://pypi.io/packages/source/{{ name[0] }}/{{ name }}/{{ name }}-{{ version }}.tar.gz
+  {{ hash_type }}: {{ hash }}
+
+build:
+  number: 0
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - setuptools
+  run:
+    - python
+
+test:
+  imports:
+    - exifread
+
+about:
+  home: https://github.com/ianare/exif-py
+  license: BSD
+  summary: Easy to use Python module to extract Exif metadata from tiff and jpeg files
+
+extra:
+  recipe-maintainers:
+    - anjos

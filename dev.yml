@@ -10,9 +10,8 @@ dependencies:
 - nose
 - sphinx
 - coverage
+- exifread
 - pymediainfo
 - watchdog
 - zc.buildout
 - ipdb
-- pip:
-  - exifread
