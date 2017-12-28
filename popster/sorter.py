@@ -100,10 +100,6 @@ EMAIL_RECEIVERS = [
 """E-mail sender and receivers for informative actions"""
 
 
-FILEMASK=(stat.S_IRUSR|stat.S_IWUSR|stat.S_IRGRP|stat.S_IWGRP|stat.S_IROTH|stat.S_IWOTH)
-"""Mask of permissions for files to be moved"""
-
-
 class DateReadoutError(IOError):
   """Exception raised in case :py:func:`read_creation_date` returns an error"""
   pass
@@ -361,7 +357,13 @@ def _copy_file(src, dst, move, dry):
     parent = os.path.dirname(dst)
     info = os.stat(parent)
     os.chown(dst, info.st_uid, info.st_gid)
-    perms = info.st_mode & FILEMASK
+
+    mode = stat.S_IMODE(info.st_mode)
+    perms = 0o600
+    if bool(mode & stat.S_IRGRP): perms += 0o040
+    if bool(mode & stat.S_IWGRP): perms += 0o020
+    if bool(mode & stat.S_IROTH): perms += 0o004
+    if bool(mode & stat.S_IWOTH): perms += 0o002
     os.chmod(dst, perms)
     logger.info("chmod %s %s", oct(perms), dst)
 
