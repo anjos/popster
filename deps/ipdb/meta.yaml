@@ -1,4 +1,4 @@
-{% set version = "0.10.2" %}
+{% set version = "0.10.3" %}
 
 package:
   name: ipdb
@@ -6,7 +6,7 @@ package:
 
 source:
   url: https://pypi.io/packages/source/i/ipdb/ipdb-{{ version }}.tar.gz
-  md5: 75aad4924214a8526e38aefd4d3099b1
+  md5: def1f6ac075d54bdee07e6501263d4fa
 
 build:
   number: 0
