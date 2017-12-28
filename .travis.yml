@@ -19,8 +19,7 @@ install:
   - hash -r
   - conda config --set always_yes yes --set changeps1 no
   - conda config --add channels anjos
-  - conda update -n root -q conda=4.2.*
-  - conda install -n root -q conda-build=2.*
+  - conda install -n root -q conda=4.2.* conda-build=2.*
   # Useful for debugging any issues with conda
   #- conda info -a
 
