@@ -1,6 +1,6 @@
 {% set name="pymediainfo" %}
-{% set version="2.1.9" %}
-{% set md5="993428f64822c9826ccec0108d6edc0c" %}
+{% set version="2.2.0" %}
+{% set md5="66602dc7015648e7735a2abae346deea" %}
 
 package:
   name: {{ name | lower }}
@@ -29,13 +29,13 @@ test:
     - {{ name }}
 
   requires:
-    - nose
+    - pytest
 
   source_files:
     - tests/*
 
   commands:
-    - nosetests -sv tests
+    - pytest
 
 about:
   home: https://github.com/sbraz/pymediainfo
