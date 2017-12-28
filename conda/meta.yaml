@@ -10,7 +10,10 @@ source:
 
 build:
   number: 0
+  preserve_egg_dir: True
   script: python setup.py install --single-version-externally-managed --record=record.txt
+  entry_points:
+    - watch = popster.watch:main
 
 requirements:
   build:
@@ -34,6 +37,7 @@ test:
     - coverage
 
   commands:
+    - watch --help
     - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
 
 about:
