@@ -368,7 +368,7 @@ def _copy_file(src, dst, move, dry):
     logger.info("chmod %s %s", oct(perms), dst)
 
 
-def copy(src, dst, fmt, move, dry):
+def copy(src, dst, fmt, nodate, move, dry):
   """Copies a single source file to a destination directory
 
   This function performs 4 distinct tasks:
@@ -389,6 +389,9 @@ def copy(src, dst, fmt, move, dry):
       that will be added to destination folder, prefixing the files copied. For
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
+
+    nodate (str): A string with the name of a directory that will be used
+      verbatim in case a date cannot be retrieved from the source filename
 
     move (bool): If set to `True`, move instead of copying. Otherwise, just
       copy the files
@@ -419,15 +422,18 @@ def copy(src, dst, fmt, move, dry):
   if os.path.splitext(src)[1].lower() not in EXTENSIONS:
     raise UnsupportedExtensionError(src)
 
-  # 2. figures out when the file was produced
-  date = read_creation_date(src)
+  # 2. figures out when the file was produced - may raise
+  try:
+    date = read_creation_date(src)
+    dst_dirname = date.strftime(fmt).lower()
+  except DateReadoutError:
+    dst_dirname = nodate
 
   # 3. move file to destination directory
-  dst_dirname = date.strftime(fmt).lower()
   dst_path = _make_dirs(dst, dst_dirname, dry)
   dst_filename = os.path.join(dst, dst_dirname, os.path.basename(src).lower())
 
-  # if a file with the same name exists, recalls myself with a "+" added to
+  # if a file with the same name exists, recalls myself with a "~" added to
   # the destination filename
   while os.path.exists(dst_filename):
     dst_filename,e = os.path.splitext(dst_filename)
@@ -438,7 +444,7 @@ def copy(src, dst, fmt, move, dry):
   return dst_filename
 
 
-def rcopy(base, dst, fmt, move, dry):
+def rcopy(base, dst, fmt, nodate, move, dry):
   """Recursively copies all files found under a given base directory
 
   This function recursively treats all files found in the source directory. It
@@ -458,6 +464,9 @@ def rcopy(base, dst, fmt, move, dry):
       that will be added to destination folder, prefixing the files copied. For
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
+
+    nodate (str): A string with the name of a directory that will be used
+      verbatim in case a date cannot be retrieved from the source filename
 
     move (bool): If set to ``True``, move instead of copying
 
@@ -503,15 +512,17 @@ def rcopy(base, dst, fmt, move, dry):
         _rmfile(filepath, dry)
         continue
       try:
-        good.append(copy(os.path.join(path, f), dst, fmt, move, dry))
+        good.append(copy(os.path.join(path, f), dst, fmt, nodate, move, dry))
       except ExplicitIgnore as e:
-        action = 'copy' if not self.move else 'move'
+        action = 'copy' if not move else 'move'
         logger.debug('explicitly ignoring file during %s operation: %s', e,
             action)
+        bad.append(os.path.join(path, f))
       except UnsupportedExtensionError as e:
-        action = 'copy' if not self.move else 'move'
+        action = 'copy' if not move else 'move'
         logger.debug('ignoring file during %s operation - unsupported ext: %s',
             e, action)
+        bad.append(os.path.join(path, f))
       except Exception as e:
         action = 'copy' if not move else 'move'
         logger.warn('could not %s %s to new destination: %s', action, path, e)
@@ -582,13 +593,16 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    nodate (str): A string with the name of a directory that will be used
+      verbatim in case a date cannot be retrieved from the source filename
+
     move (bool): If set to ``True``, move instead of copying
 
     dry (bool): If set to ``True``, then it will not copy anything, just log.
 
   '''
 
-  def __init__(self, base, dst, fmt, move, dry):
+  def __init__(self, base, dst, fmt, nodate, move, dry):
 
     super(Handler, self).__init__(
         patterns = ['*%s' % k for k in EXTENSIONS],
@@ -600,6 +614,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.base = base
     self.dst = dst
     self.fmt = fmt
+    self.nodate = nodate
     self.move = move
     self.dry = dry
 
@@ -732,7 +747,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     # process local queue copy - deletions are no longer possible
     for path in local_queue:
       try:
-        self.good.append(copy(path, self.dst, self.fmt, self.move, self.dry))
+        self.good.append(copy(path, self.dst, self.fmt, self.nodate, self.move,
+          self.dry))
       except ExplicitIgnore as e:
         action = 'copy' if not self.move else 'move'
         logger.debug('explicitly ignoring file during %s operation: %s', e,
@@ -806,6 +822,9 @@ class Sorter(object):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    nodate (str): A string with the name of a directory that will be used
+      verbatim in case a date cannot be retrieved from the source filename
+
     move (bool): If set to ``True``, move instead of copying
 
     dry (bool): If set to ``True``, then it will not copy anything, just log.
@@ -816,10 +835,10 @@ class Sorter(object):
 
   '''
 
-  def __init__(self, base, dst, fmt, move, dry, email, idleness):
+  def __init__(self, base, dst, fmt, nodate, move, dry, email, idleness):
 
     self.observer = watchdog.observers.Observer()
-    self.handler = Handler(base, dst, fmt, move, dry)
+    self.handler = Handler(base, dst, fmt, nodate, move, dry)
     self.email = email
     self.idleness = idleness
 

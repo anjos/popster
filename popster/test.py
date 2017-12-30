@@ -19,7 +19,8 @@ else:
   from tempfile import TemporaryDirectory
 
 
-from .sorter import read_creation_date, copy, rcopy, DateReadoutError, Sorter
+from .sorter import read_creation_date, copy, rcopy, DateReadoutError, \
+    Sorter, UnsupportedExtensionError
 
 
 def data_path(f=None):
@@ -65,14 +66,13 @@ def test_move():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=True, dry=False)
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder) #not removed
     assert os.path.exists(base) #not removed
 
 
-@nose.tools.raises(DateReadoutError)
-def test_move_fails():
+def test_move_nodate():
 
   # Tests if can correctly detect moving fails
 
@@ -85,7 +85,27 @@ def test_move_fails():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=True, dry=False)
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=False)
+    assert os.path.exists(result)
+    assert os.path.exists(subfolder) #not removed
+    assert os.path.exists(base) #not removed
+
+
+@nose.tools.raises(UnsupportedExtensionError)
+def test_move_unsupported_raises():
+
+  # Tests if can correctly detect moving fails
+
+  # Temporary setup
+  src = data_path('unsupported.txt')
+  fmt = '%Y/%B/%d.%m.%Y'
+
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
+    subfolder = os.path.join(base, 'subfolder')
+    os.mkdir(subfolder)
+    shutil.copy2(src, subfolder)
+    src = os.path.join(subfolder, os.path.basename(src))
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder) #not removed
     assert os.path.exists(base) #not removed
@@ -104,7 +124,7 @@ def test_move_dry():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=True, dry=True)
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=True)
     assert os.path.exists(subfolder) #removed
     assert not os.path.exists(result) #not created
 
@@ -122,7 +142,7 @@ def test_copy():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=False, dry=False)
+    result = copy(src, dst, fmt, nodate='nodate', move=False, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder)
 
@@ -140,19 +160,18 @@ def test_copy_same():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result1 = copy(src, dst, fmt, move=False, dry=False)
+    result1 = copy(src, dst, fmt, nodate='nodate', move=False, dry=False)
     assert os.path.exists(result1)
     assert os.path.exists(subfolder)
     # do it again
-    result2 = copy(src, dst, fmt, move=False, dry=False)
+    result2 = copy(src, dst, fmt, nodate='nodate', move=False, dry=False)
     assert os.path.exists(result2)
     assert result1 != result2
     assert result2.endswith('~.jpg')
     assert os.path.exists(subfolder)
 
 
-@nose.tools.raises(DateReadoutError)
-def test_copy_fails():
+def test_copy_nodate():
 
   # Tests if can organize at least the sample photo
 
@@ -165,7 +184,26 @@ def test_copy_fails():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=False, dry=False)
+    result = copy(src, dst, fmt, nodate='nodate', move=False, dry=False)
+    assert os.path.exists(result)
+    assert os.path.exists(subfolder)
+
+
+@nose.tools.raises(UnsupportedExtensionError)
+def test_copy_unsupported_raises():
+
+  # Tests if can organize at least the sample photo
+
+  # Temporary setup
+  src = data_path('unsupported.txt')
+  fmt = '%Y/%B/%d.%m.%Y'
+
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
+    subfolder = os.path.join(base, 'subfolder')
+    os.mkdir(subfolder)
+    shutil.copy2(src, subfolder)
+    src = os.path.join(subfolder, os.path.basename(src))
+    result = copy(src, dst, fmt, nodate='nodate', move=False, dry=False)
     assert os.path.exists(result)
     assert os.path.exists(subfolder)
 
@@ -183,7 +221,7 @@ def test_copy_dry():
     os.mkdir(subfolder)
     shutil.copy2(src, subfolder)
     src = os.path.join(subfolder, os.path.basename(src))
-    result = copy(src, dst, fmt, move=False, dry=True)
+    result = copy(src, dst, fmt, nodate='nodate', move=False, dry=True)
     assert os.path.exists(subfolder)
     assert not os.path.exists(result)
 
@@ -196,22 +234,24 @@ def test_move_many():
   fmt = '%Y/%B/%d.%m.%Y'
 
   # Ground truth
-  bad_src = ['img_without_exif.jpg']
+  bad_src = ['unsupported.txt']
   bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
   good_src = [
       'img_with_exif.jpg',
+      'img_without_exif.jpg',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('nodate', 'img_without_exif.jpg'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
     src = os.path.join(base, os.path.basename(data))
     shutil.copytree(data, src)
-    good, bad = rcopy(base, dst, fmt, move=True, dry=False)
+    good, bad = rcopy(base, dst, fmt, nodate='nodate', move=True, dry=False)
     bad_full = [os.path.join(base, k) for k in bad_src]
     assert sorted(bad_full) == sorted(bad)
     for k in bad_full:
@@ -234,15 +274,17 @@ def test_move_all():
   fmt = '%Y/%B/%d.%m.%Y'
 
   # Ground truth
-  bad_src = ['img_without_exif.jpg']
+  bad_src = ['unsupported.txt']
   bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
   good_src = [
       'img_with_exif.jpg',
+      'img_without_exif.jpg',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('nodate', 'img_without_exif.jpg'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -254,7 +296,7 @@ def test_move_all():
     for k in bad_src:
       os.unlink(os.path.join(base, k))
 
-    good, bad = rcopy(base, dst, fmt, move=True, dry=False)
+    good, bad = rcopy(base, dst, fmt, nodate='nodate', move=True, dry=False)
 
     assert len(bad) == 0
 
@@ -280,22 +322,24 @@ def test_watch():
   fmt = '%Y/%B/%d.%m.%Y'
 
   # Ground truth
-  bad_src = ['img_without_exif.jpg']
+  bad_src = ['unsupported.txt']
   bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
   good_src = [
       'img_with_exif.jpg',
+      'img_without_exif.jpg',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('nodate', 'img_without_exif.jpg'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
-    sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=1)
+    sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
+        email=False, idleness=1)
     sorter.start()
 
     # simulates copying (creating) data into the base directory
@@ -331,23 +375,25 @@ def test_watch_move():
   fmt = '%Y/%B/%d.%m.%Y'
 
   # Ground truth
-  bad_src = ['img_without_exif.jpg']
+  bad_src = ['unsupported.txt']
   bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
   good_src = [
       'img_with_exif.jpg',
+      'img_without_exif.jpg',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('nodate', 'img_without_exif.jpg'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
   with TemporaryDirectory() as start, TemporaryDirectory() as base, \
       TemporaryDirectory() as dst:
 
-    sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=1)
+    sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
+        email=False, idleness=1)
     sorter.start()
 
     # simulates moving data into the base directory
@@ -383,15 +429,17 @@ def test_start_with_files():
   fmt = '%Y/%B/%d.%m.%Y'
 
   # Ground truth
-  bad_src = ['img_without_exif.jpg']
+  bad_src = ['unsupported.txt']
   bad_src = [os.path.join(os.path.basename(data), k) for k in bad_src]
   good_src = [
       'img_with_exif.jpg',
+      'img_without_exif.jpg',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
+      os.path.join('nodate', 'img_without_exif.jpg'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -405,8 +453,8 @@ def test_start_with_files():
     for k in bad_src:
       os.unlink(os.path.join(base, k))
 
-    sorter = Sorter(base, dst, fmt, move=True, dry=False, email=False,
-        idleness=1)
+    sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
+        email=False, idleness=1)
     sorter.start()
 
     time.sleep(1)

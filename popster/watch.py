@@ -16,6 +16,10 @@ Options:
   -f, --folder-format=<fmt>   How to format (using date formatters), the
                               destination folder where the photos/videos are
                               going to be stored [default: %%Y/%%B/%%d.%%m.%%Y]
+  -N, --no-date-path=<str>    A string with the name of a directory that will
+                              be used verbatim in case a date cannot be
+                              retrieved from the source filename
+                              [default: Sem Data]
   -n, --dry-run               If set, just tell what it would do instead of
                               doing it. This flag is good for testing.
   -e, --email                 If set, e-mail agents responsible every time
@@ -80,6 +84,7 @@ def main(user_input=None):
   logger.info("Watching for photos/movies on: %s", args['--source'])
   logger.info("Moving photos/movies to: %s", args['--dest'])
   logger.info("Folder format set to: %s", args['--folder-format'])
+  logger.info("No-date path set to: %s", args['--no-date-path'])
   logger.info("Checkpoint timeout: %s seconds", args['--check-point'])
   logger.info("Idle time set to: %s seconds", args['--idleness'])
   if args['--email']:
@@ -94,6 +99,7 @@ def main(user_input=None):
       base=args['--source'],
       dst=args['--dest'],
       fmt=args['--folder-format'],
+      nodate=args['--no-date-path'],
       move=not(args['--copy']),
       dry=args['--dry-run'],
       email=args['--email'],
