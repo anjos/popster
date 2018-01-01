@@ -27,6 +27,7 @@ import watchdog.observers
 
 EXTENSIONS=[
     '.jpg',
+    '.jpeg',
     '.cr2', #canon raw images (mostly tiff with exif)
     '.thm', #thumbnail files, with exif information (little jpg)
     '.png', #screenshots on macOS and iOS devices
@@ -266,6 +267,7 @@ def _video_read_creation_date(path):
 
 CREATION_DATE_READER={
     '.jpg': _jpeg_read_creation_date,
+    '.jpeg': _jpeg_read_creation_date,
     '.cr2': _jpeg_read_creation_date,
     '.thm': _jpeg_read_creation_date,
     '.png': _png_read_creation_date,
