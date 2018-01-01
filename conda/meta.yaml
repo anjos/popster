@@ -27,6 +27,7 @@ requirements:
     - watchdog
     - exifread
     - pymediainfo
+    - pillow
 
 test:
   imports:
