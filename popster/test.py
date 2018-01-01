@@ -35,7 +35,15 @@ def test_jpeg_readout():
   # Tests one extract the proper exif tag from a jpeg file
 
   date = read_creation_date(data_path('img_with_exif.jpg'))
-  assert date == datetime.datetime(2003, 12, 14, 12, 1, 44)
+  nose.tools.eq_(date, datetime.datetime(2003, 12, 14, 12, 1, 44))
+
+
+def test_png_readout():
+
+  # Tests one extract the proper date from a png file
+
+  date = read_creation_date(data_path('img_with_xmp.png'))
+  nose.tools.eq_(date, datetime.datetime(2017, 8, 29, 16, 55, 32))
 
 
 def test_movie_readout():
@@ -53,7 +61,14 @@ def test_exif_failure():
   read_creation_date(data_path('img_without_exif.jpg'))
 
 
-def test_move():
+@nose.tools.raises(DateReadoutError)
+def test_xmp_failure():
+
+  # Tests it raises a proper exception when the jpeg file has no exif info
+  read_creation_date(data_path('img_without_xmp.png'))
+
+
+def test_move_jpg():
 
   # Tests if can organize at least the sample photo
 
@@ -72,12 +87,50 @@ def test_move():
     assert os.path.exists(base) #not removed
 
 
-def test_move_nodate():
+def test_move_png():
+
+  # Tests if can organize at least the sample photo
+
+  # Temporary setup
+  src = data_path('img_with_xmp.png')
+  fmt = '%Y/%B/%d.%m.%Y'
+
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
+    subfolder = os.path.join(base, 'subfolder')
+    os.mkdir(subfolder)
+    shutil.copy2(src, subfolder)
+    src = os.path.join(subfolder, os.path.basename(src))
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=False)
+    assert os.path.exists(result)
+    assert os.path.exists(subfolder) #not removed
+    assert os.path.exists(base) #not removed
+
+
+def test_move_jpg_nodate():
 
   # Tests if can correctly detect moving fails
 
   # Temporary setup
   src = data_path('img_without_exif.jpg')
+  fmt = '%Y/%B/%d.%m.%Y'
+
+  with TemporaryDirectory() as base, TemporaryDirectory() as dst:
+    subfolder = os.path.join(base, 'subfolder')
+    os.mkdir(subfolder)
+    shutil.copy2(src, subfolder)
+    src = os.path.join(subfolder, os.path.basename(src))
+    result = copy(src, dst, fmt, nodate='nodate', move=True, dry=False)
+    assert os.path.exists(result)
+    assert os.path.exists(subfolder) #not removed
+    assert os.path.exists(base) #not removed
+
+
+def test_move_png_nodate():
+
+  # Tests if can correctly detect moving fails
+
+  # Temporary setup
+  src = data_path('img_without_xmp.png')
   fmt = '%Y/%B/%d.%m.%Y'
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
@@ -239,12 +292,16 @@ def test_move_many():
   good_src = [
       'img_with_exif.jpg',
       'img_without_exif.jpg',
+      'img_with_xmp.png',
+      'img_without_xmp.png',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
       os.path.join('nodate', 'img_without_exif.jpg'),
+      os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
+      os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -279,12 +336,16 @@ def test_move_all():
   good_src = [
       'img_with_exif.jpg',
       'img_without_exif.jpg',
+      'img_with_xmp.png',
+      'img_without_xmp.png',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
       os.path.join('nodate', 'img_without_exif.jpg'),
+      os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
+      os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -327,12 +388,16 @@ def test_watch():
   good_src = [
       'img_with_exif.jpg',
       'img_without_exif.jpg',
+      'img_with_xmp.png',
+      'img_without_xmp.png',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
       os.path.join('nodate', 'img_without_exif.jpg'),
+      os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
+      os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -380,12 +445,16 @@ def test_watch_move():
   good_src = [
       'img_with_exif.jpg',
       'img_without_exif.jpg',
+      'img_with_xmp.png',
+      'img_without_xmp.png',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
       os.path.join('nodate', 'img_without_exif.jpg'),
+      os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
+      os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 
@@ -434,12 +503,16 @@ def test_start_with_files():
   good_src = [
       'img_with_exif.jpg',
       'img_without_exif.jpg',
+      'img_with_xmp.png',
+      'img_without_xmp.png',
       'mp4.mp4',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
       os.path.join('2003', 'december', '14.12.2003', 'img_with_exif.jpg'),
       os.path.join('nodate', 'img_without_exif.jpg'),
+      os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
+      os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       ]
 

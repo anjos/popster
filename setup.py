@@ -25,6 +25,7 @@ setup(
       'watchdog',
       'exifread',
       'pymediainfo',
+      'pillow',
       ],
 
     entry_points = {

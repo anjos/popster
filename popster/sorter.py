@@ -5,6 +5,7 @@
 
 
 import os
+import re
 import sys
 import time
 import stat
@@ -19,6 +20,7 @@ logger = logging.getLogger(__name__)
 
 import exifread
 from pymediainfo import MediaInfo
+from PIL import Image
 import watchdog.events
 import watchdog.observers
 
@@ -27,12 +29,17 @@ EXTENSIONS=[
     '.jpg',
     '.cr2', #canon raw images (mostly tiff with exif)
     '.thm', #thumbnail files, with exif information (little jpg)
+    '.png', #screenshots on macOS and iOS devices
     '.avi', #older cameras
     '.mp4', #canon powershot g7 x mark ii
     '.mov', #iphone, powershot sx230 hs, canon eos 500d
     '.m4v', #ipod encoded clips
     ]
 """List of extensions supported by this program (lower-case)"""
+
+
+XMP_DATECREATED=re.compile(r'(?P<d>\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})')
+"""Regular expression to search for dates in XMP data"""
 
 
 def _ignore_dir(d):
@@ -157,6 +164,39 @@ def setup_logger(name, verbosity):
   return logger
 
 
+def _png_read_creation_date(path):
+  """Retrieves the original creation date of the input PNG file
+
+  This function use the XMP tags (DateCreated) to figure out when a file
+  was originally created. If that is not available, raises an exception.
+
+
+  Parameters:
+
+    path (str): A full-path leading to the file to read the data from
+
+
+  Returns:
+
+    datetime.datetime: A standard library date-time object representing the
+      time the object was created
+
+
+  Raises:
+
+    DateReadoutError: in case an error occurs trying to extract the date the
+    file was produced from its metadata.
+
+  """
+
+  try:
+    meta = ''.join([str(k) for k in Image.open(path).info.values()])
+    date = XMP_DATECREATED.search(meta).groups()[0]
+    return datetime.datetime.strptime(date, '%Y-%m-%dT%H:%M:%S')
+  except Exception as e:
+    raise DateReadoutError(str(e))
+
+
 def _jpeg_read_creation_date(path):
   """Retrieves the original creation date of the input JPEG file
 
@@ -228,6 +268,7 @@ CREATION_DATE_READER={
     '.jpg': _jpeg_read_creation_date,
     '.cr2': _jpeg_read_creation_date,
     '.thm': _jpeg_read_creation_date,
+    '.png': _png_read_creation_date,
     '.avi': _video_read_creation_date,
     '.mp4': _video_read_creation_date,
     '.mov': _video_read_creation_date,
