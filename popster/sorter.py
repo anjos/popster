@@ -517,7 +517,6 @@ def rcopy(base, dst, fmt, nodate, move, dry):
         action = 'copy' if not move else 'move'
         logger.debug('explicitly ignoring file during %s operation: %s', e,
             action)
-        bad.append(os.path.join(path, f))
       except UnsupportedExtensionError as e:
         action = 'copy' if not move else 'move'
         logger.debug('ignoring file during %s operation - unsupported ext: %s',
