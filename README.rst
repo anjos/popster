@@ -113,6 +113,14 @@ everytime), do::
   $ anaconda upload <conda-bld>/<os>/{pymediainfo,exifread,argh,pathtools,watchdog,zc.buildout,ipdb,popster}-*.tar.bz2
 
 
+Docker Image Building
+=====================
+
+To build a readily deployable docker image, do::
+
+  $ docker build -t anjos/popster:latest -t anjos/popster:v1.2.0 .
+
+
 .. Place your references after this line
 .. _conda: http://conda.pydata.org/miniconda.html
 .. _mediainfo: https://mediaarea.net/en/MediaInfo
