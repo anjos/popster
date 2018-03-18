@@ -347,10 +347,10 @@ def _make_dirs(path, name, dry):
       for root, dirs, files in os.walk(os.path.join(path, basedir)):
         for d in dirs:
           os.chown(os.path.join(root, d), info.st_uid, info.st_gid)
+      logger.info("mkdir -p %s/ [parent mode: %s]" % \
+          (retval, oct(stat.S_IMODE(info.st_mode))))
     except OSError as exception:
       if exception.errno != errno.EEXIST: raise
-    else:
-      logger.info("mkdir %s/" % retval)
 
   return retval
 

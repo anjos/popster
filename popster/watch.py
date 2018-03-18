@@ -15,7 +15,7 @@ Options:
                               multiple times
   -f, --folder-format=<fmt>   How to format (using date formatters), the
                               destination folder where the photos/videos are
-                              going to be stored [default: %%Y/%%B/%%d.%%m.%%Y]
+                              going to be stored [default: %%Y/%%m/%%d.%%m.%%Y]
   -N, --no-date-path=<str>    A string with the name of a directory that will
                               be used verbatim in case a date cannot be
                               retrieved from the source filename
@@ -36,7 +36,7 @@ Options:
                               setting. [default: 10]
   -i, --idleness=<secs>       Number of seconds to wait until no more activity
                               is registered and before it can dispatch summary
-                              e-mails [default: 60]
+                              e-mails [default: 30]
   -S, --server=<host>         Name of the SMTP server to use for sending the
                               message [default: smtp.gmail.com]
   -P, --port=<port>           Port to use on the server [default: 587]
