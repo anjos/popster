@@ -120,6 +120,11 @@ To build a readily deployable docker image, do::
 
   $ docker build -t anjos/popster:latest -t anjos/popster:v1.2.0 .
 
+.. note::
+
+   Before running the above command, make sure to tag this package
+   appropriately and to build and deploy conda packages for such a release.
+
 
 .. Place your references after this line
 .. _conda: http://conda.pydata.org/miniconda.html
