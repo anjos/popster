@@ -16,9 +16,9 @@ RUN CONDA_VERSION="4.4.10" && \
     echo "export PATH=$CONDA_DIR/bin:\$PATH" > /etc/profile.d/conda.sh && \
     rm miniconda.sh && \
     \
-    conda update --all --yes && \
+    conda update --yes conda && \
     conda config --set auto_update_conda False && \
-    conda install --name=base -c anjos popster && \
+    conda install --name=base --channel=anjos popster && \
     rm -r "$CONDA_DIR/pkgs/" && \
     \
     apk del --purge .build-dependencies && \
