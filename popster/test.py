@@ -404,7 +404,8 @@ def test_watch():
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, idleness=1)
+        email=False, server='smtp.gmail.com', port=587,
+        username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 
     # simulates copying (creating) data into the base directory
@@ -462,7 +463,8 @@ def test_watch_move():
       TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, idleness=1)
+        email=False, server='smtp.gmail.com', port=587,
+        username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 
     # simulates moving data into the base directory
@@ -527,7 +529,8 @@ def test_start_with_files():
       os.unlink(os.path.join(base, k))
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, idleness=1)
+        email=False, server='smtp.gmail.com', port=587,
+        username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 
     time.sleep(1)

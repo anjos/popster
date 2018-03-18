@@ -37,6 +37,11 @@ Options:
   -i, --idleness=<secs>       Number of seconds to wait until no more activity
                               is registered and before it can dispatch summary
                               e-mails [default: 60]
+  -S, --server=<host>         Name of the SMTP server to use for sending the
+                              message [default: smtp.gmail.com]
+  -P, --port=<port>           Port to use on the server [default: 587]
+  -u, --username=<name>       Username for the SMTP authentication
+  -w, --password=<pwd>        Password for the SMTP authentication
 
 
 Examples:
@@ -47,7 +52,7 @@ Examples:
 
   2. Runs the program and e-mails when done:
 
-     $ %(prog)s -vv --email
+     $ %(prog)s -vv --email --username=me@gmail.com --password=secret
 
 """
 
@@ -103,6 +108,10 @@ def main(user_input=None):
       move=not(args['--copy']),
       dry=args['--dry-run'],
       email=args['--email'],
+      server=args['--server'],
+      port=int(args['--port']),
+      username=args['--username'],
+      password=args['--password'],
       idleness=idleness,
       )
 

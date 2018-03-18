@@ -11,9 +11,12 @@ import time
 import stat
 import errno
 import shutil
+import smtplib
 import datetime
 import platform
 import subprocess
+
+import email.mime.text
 
 import logging
 logger = logging.getLogger(__name__)
@@ -591,25 +594,26 @@ class Email(object):
 
   def __init__(self, subject, body, sender=EMAIL_SENDER, to=EMAIL_RECEIVERS):
 
-    from email.mime.text import MIMEText
-    self.msg = MIMEText(body)
-    self.msg['Subject'] = subject
+    self.subject = subject
+    self.body = body
     self.sender = sender
-    self.msg['From'] = self.sender
     self.to = to
+
+    # mime message setup
+    self.msg = email.mime.text.MIMEText(self.body)
+    self.msg['Subject'] = self.subject
+    self.msg['From'] = self.sender
     self.msg['To'] = ', '.join(self.to)
 
 
-  def send(self):
-    '''Sends message using the sendmail binary (no other way on QNAP)'''
+  def send(self, server, port, username, password):
 
-    if os.path.exists('/opt/sbin/sendmail'):
-      sendmail = '/opt/sbin/sendmail'
-    else:
-      sendmail = '/usr/sbin/sendmail'
-
-    p = subprocess.Popen([sendmail, "-t", "-oi"], stdin=subprocess.PIPE)
-    p.communicate(self.msg.as_bytes())
+    server = smtplib.SMTP(server, port)
+    server.ehlo()
+    server.starttls()
+    server.login(username, password)
+    server.sendmail(self.sender, self.to, self.msg.as_bytes())
+    server.close()
 
 
   def message(self):
@@ -873,15 +877,29 @@ class Sorter(object):
 
     email (bool): If set to ``True``, then e-mail admins about results.
 
+    server (str): Hostname of the SMTP server to use for sending e-mails
+
+    port (int): Port to use on the host above for sending e-mails
+
+    username (str): Name of the user to use for SMTP authentication on the
+      server
+
+    password (str): Password for the user above on the SMTP server
+
     idleness (int): Time after which, we should report
 
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry, email, idleness):
+  def __init__(self, base, dst, fmt, nodate, move, dry, email, server, port,
+      username, password, idleness):
 
     self.observer = watchdog.observers.Observer()
     self.handler = Handler(base, dst, fmt, nodate, move, dry)
     self.email = email
+    self.server = server
+    self.port = port
+    self.username = username
+    self.password = password
     self.idleness = idleness
 
 
@@ -910,7 +928,7 @@ class Sorter(object):
 
     if self.email:
       logger.debug(email.message())
-      email.send()
+      email.send(self.server, self.port, self.username, self.password)
     else:
       logger.info(email.message())
 
