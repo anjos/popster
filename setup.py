@@ -31,6 +31,7 @@ setup(
     entry_points = {
       'console_scripts': [
         'watch = popster.watch:main',
+        'check_date = popster.check_date:main',
       ],
     },
 
