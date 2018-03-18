@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='popster',
-    version='1.1.1',
+    version='1.1.2',
     description="A pythonic photo importer for my QNAP NAS",
     url='https://github.com/anjos/popster',
     license="GPLv3",
