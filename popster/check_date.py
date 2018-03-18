@@ -18,9 +18,6 @@ Options:
   -V, --version               Prints the version and exits
   -v, --verbose               Increases the output verbosity level. May be used
                               multiple times
-  -f, --folder-format=<fmt>   How to format (using date formatters), the
-                              destination folder where the photos/videos are
-                              going to be stored [default: %%Y/%%B/%%d.%%m.%%Y]
 
 
 Examples:
