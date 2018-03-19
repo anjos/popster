@@ -98,7 +98,7 @@ prepare::
 Then, you can build dependencies one by one, in order::
 
   $ conda-build deps/mediainfo
-  $ for v in 2.7 3.4 3.5 3.6; do for p in deps/pymediainfo deps/exifread deps/argh deps/pathtools deps/watchdog deps/zc.buildout deps/ipdb conda; do conda-build $p --python=$v; done; done
+  $ for v in 2.7 3.6; do for p in deps/pymediainfo deps/exifread deps/argh deps/pathtools deps/watchdog conda; do conda-build $p --python=$v; done; done
 
 
 Anaconda Uploads
@@ -110,7 +110,7 @@ everytime), do::
   $ anaconda login
   # enter credentials
   $ anaconda upload <conda-bld>/<os>/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/<os>/{pymediainfo,exifread,argh,pathtools,watchdog,zc.buildout,ipdb,popster}-*.tar.bz2
+  $ anaconda upload <conda-bld>/<os>/{pymediainfo,exifread,argh,pathtools,watchdog,popster}-*.tar.bz2
 
 
 Docker Image Building
@@ -118,7 +118,7 @@ Docker Image Building
 
 To build a readily deployable docker image, do::
 
-  $ docker build -t anjos/popster:latest -t anjos/popster:v1.2.0 .
+  $ docker build -t anjos/popster:latest -t anjos/popster:vX.Y.Z .
 
 .. note::
 
