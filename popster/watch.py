@@ -25,10 +25,9 @@ Options:
   -e, --email                 If set, e-mail agents responsible every time
                               action occurs
   -s, --source=<path>         Path leading to the folder to watch for
-                              photographs to import
-                              [default: /share/Download/SmartImport]
+                              photographs to import [default: /imported]
   -d, --dest=<path>           Path leading to the folder to dump photos to
-                              [default: /share/Pictures/Para Organizar]
+                              [default: /organized]
   -c, --copy                  Copy instead of moving files from the source
                               folder (this will be a bit slower).
   -p, --check-point=<secs>    Number of seconds to wait before each check. This
