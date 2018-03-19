@@ -18,7 +18,7 @@ RUN CONDA_VERSION="4.4.10" && \
     \
     conda update --yes conda && \
     conda config --set auto_update_conda False && \
-    conda install --name=base --channel=anjos popster && \
+    conda install --name=base --channel=anjos popster=1.2.2 && \
     rm -r "$CONDA_DIR/pkgs/" && \
     \
     apk del --purge .build-dependencies && \
