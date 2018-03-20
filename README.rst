@@ -1,5 +1,7 @@
 .. image:: https://travis-ci.org/anjos/popster.svg?branch=master
    :target: https://travis-ci.org/anjos/popster
+.. image:: https://img.shields.io/docker/pulls/anjos/popster.svg
+   :target: https://hub.docker.com/r/anjos/popster/
 
 ---------
  Popster
@@ -113,12 +115,46 @@ everytime), do::
   $ anaconda upload <conda-bld>/<os>/{pymediainfo,exifread,argh,pathtools,watchdog,popster}-*.tar.bz2
 
 
+Deployment
+==========
+
+QNAP has a proprietary packaging format for native applications called QPKG_.
+While it allows one to create apps that are directly installable using QNAP's
+App Center, it also ties in the running environment (mostly libc's
+dependencies) for the current OS. This implies applications need to be
+re-packaged at every major OS release. It may also bring conflicts with Conda's
+default channel ABIs.
+
+Instead of doing so, I opted for a deployment based on Docker containers. The
+main advantages of this approach is that containers are (almost) OS independent
+and there is a huge source of information and resources for building container
+images on the internet.
+
+To deploy popster, just download the released image at DockerHub_ and create a
+container through Container Station. The container starts the built-in
+``watch`` application that moves images/movies from one directory to another,
+for later curation. I typically just mount media files (set this in "Advanced
+Settings" -> "Shared folders") to be organized inside ``/imported`` and move
+them to ``/organized`` for later curation. The run command I typically use is
+this::
+
+  # choose entrypoint to be "watch"
+  -vv --idleness=30 --source=/imported --dest=/organized --no-date-path="Missing-Date" --email --username="your.username@gmail.com" --password="create-an-app-password-for-gmail"
+
+If you'd like to use Gmail for sending e-mails about latest activity, just make
+sure to set the ``--email`` flag and set your username and specific-app
+password (to avoid 2-factor authentication). ``popster`` should handle this
+flawlessly. Other e-mail providers should also be reacheable in the same way.
+
+
 Docker Image Building
 =====================
 
 To build a readily deployable docker image, do::
 
-  $ docker build -t anjos/popster:latest -t anjos/popster:vX.Y.Z .
+  $ docker build -t anjos/popster:vX.Y.Z .
+  $ #upload it like this:
+  $ docker push anjos/popster:vX.Y.Z
 
 .. note::
 
@@ -129,3 +165,5 @@ To build a readily deployable docker image, do::
 .. Place your references after this line
 .. _conda: http://conda.pydata.org/miniconda.html
 .. _mediainfo: https://mediaarea.net/en/MediaInfo
+.. _qpkg: https://wiki.qnap.com/wiki/QPKG_Development_Guidelines
+.. _dockerhub: https://hub.docker.com/r/anjos/popster/
