@@ -4,6 +4,7 @@
 '''Test units'''
 
 import os
+import stat
 import time
 import shutil
 import datetime
@@ -19,8 +20,8 @@ else:
   from tempfile import TemporaryDirectory
 
 
-from .sorter import read_creation_date, copy, rcopy, DateReadoutError, \
-    Sorter, UnsupportedExtensionError
+from .sorter import read_creation_date, copy, rcopy, make_dirs, \
+    DateReadoutError, Sorter, UnsupportedExtensionError
 
 
 def data_path(f=None):
@@ -66,6 +67,56 @@ def test_xmp_failure():
 
   # Tests it raises a proper exception when the jpeg file has no exif info
   read_creation_date(data_path('img_without_xmp.png'))
+
+
+def test_make_dirs():
+
+  # Tests if our make dir equivalent will correctly set permission bits on
+  # created directories
+  with TemporaryDirectory() as base:
+
+    # make a temporary dir group set-bit and read/writeable to check
+    # it also provides a recipe to make it work inside our own make_dirs()
+    mode = stat.S_IFDIR | stat.S_ISGID | stat.S_IRWXU | stat.S_IRWXG #drwxrws---
+    top = os.path.join(base, 'top')
+    os.makedirs(top, mode)
+    os.chmod(top, mode) # reset group set bit, others because of umask
+    info = os.stat(top)
+    nose.tools.eq_(oct(info.st_mode), oct(mode))
+    owner_id = info.st_uid
+    group_id = info.st_gid
+
+    # our test
+    make_dirs(top, 'test', dry=False) #inherit parents permissions
+    test = os.path.join(top, 'test')
+    info = os.stat(test)
+    # checks if preserves parent mode, owner and group
+    nose.tools.eq_(oct(info.st_mode), oct(mode))
+    nose.tools.eq_(info.st_uid, owner_id)
+    nose.tools.eq_(info.st_gid, group_id)
+
+    # go deeper, should preserve
+    make_dirs(top, 'test/a/b/c/d', dry=False) #inherit parents permissions
+    test = os.path.join(top, 'test')
+    info = os.stat(test)
+    # checks if preserves parent mode, owner and group
+    nose.tools.eq_(oct(info.st_mode), oct(mode))
+    nose.tools.eq_(info.st_uid, owner_id)
+    nose.tools.eq_(info.st_gid, group_id)
+
+    test = os.path.join(top, 'test/a/b')
+    info = os.stat(test)
+    # checks if preserves parent mode, owner and group
+    nose.tools.eq_(oct(info.st_mode), oct(mode))
+    nose.tools.eq_(info.st_uid, owner_id)
+    nose.tools.eq_(info.st_gid, group_id)
+
+    test = os.path.join(top, 'test/a/b/c/d')
+    info = os.stat(test)
+    # checks if preserves parent mode, owner and group
+    nose.tools.eq_(oct(info.st_mode), oct(mode))
+    nose.tools.eq_(info.st_uid, owner_id)
+    nose.tools.eq_(info.st_gid, group_id)
 
 
 def test_move_jpg():

@@ -319,7 +319,7 @@ def read_creation_date(path):
         % (ext, path))
 
 
-def _make_dirs(path, name, dry):
+def make_dirs(path, name, dry):
   """Safely creates a directory preserving owner, group and parent permissions
 
 
@@ -344,11 +344,18 @@ def _make_dirs(path, name, dry):
     try:
       os.makedirs(retval, info.st_mode)
       basedir = name.split(os.sep)[0]
-      for root, dirs, files in os.walk(os.path.join(path, basedir)):
-        for d in dirs:
-          os.chown(os.path.join(root, d), info.st_uid, info.st_gid)
-      logger.info("mkdir -p %s/ [parent mode: %s]" % \
-          (retval, oct(stat.S_IMODE(info.st_mode))))
+      first_subdir = os.path.join(path, basedir)
+      #n.b.: chown changes set-group bit! needs to go first
+      os.chown(first_subdir, info.st_uid, info.st_gid)
+      os.chmod(first_subdir, info.st_mode)
+      for root, dirs, files in os.walk(first_subdir):
+        for d in dirs: # reset permissions recursively
+          subdir = os.path.join(root, d)
+          #n.b.: chown changes set-group bit! needs to go first
+          os.chown(subdir, info.st_uid, info.st_gid)
+          os.chmod(subdir, info.st_mode)
+      logger.info("mkdir -p %s/ [self: %s; parent:%s]" % \
+          (retval, oct(os.stat(retval).st_mode), oct(info.st_mode)))
     except OSError as exception:
       if exception.errno != errno.EEXIST: raise
 
@@ -476,7 +483,7 @@ def copy(src, dst, fmt, nodate, move, dry):
     dst_dirname = nodate
 
   # 3. move file to destination directory
-  dst_path = _make_dirs(dst, dst_dirname, dry)
+  dst_path = make_dirs(dst, dst_dirname, dry)
   dst_filename = os.path.join(dst, dst_dirname, os.path.basename(src).lower())
 
   # if a file with the same name exists, recalls myself with a "~" added to
