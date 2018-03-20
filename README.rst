@@ -73,7 +73,7 @@ Build
 
 To build the project and make it ready to run, do::
 
-  $ source activate popster
+  $ source activate popster-dev
   $ buildout
 
 This command should leave you with a functional environment.
