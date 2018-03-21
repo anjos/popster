@@ -85,6 +85,8 @@ def main(user_input=None):
   from .sorter import setup_logger, Sorter
   logger = setup_logger('popster', args['--verbose'])
 
+  logger.info("Popster version %s (running on %s)",
+      (completions['version'], os.environ.get('HOSTNAME', 'docker')))
   logger.info("Watching for photos/movies on: %s", args['--source'])
   logger.info("Moving photos/movies to: %s", args['--dest'])
   logger.info("Folder format set to: %s", args['--folder-format'])
