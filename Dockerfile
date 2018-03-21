@@ -1,10 +1,8 @@
 FROM frolvlad/alpine-glibc:alpine-3.7
 
-ENV CONDA_DIR="/opt/conda"
-ENV PATH="$CONDA_DIR/bin:$PATH"
-
 # Install conda
-RUN CONDA_VERSION="4.4.10" && \
+RUN CONDA_DIR="/opt/conda" && \
+    CONDA_VERSION="4.4.10" && \
     CONDA_MD5_CHECKSUM="bec6203dbb2f53011e974e9bf4d46e93" && \
     \
     apk add --no-cache --virtual=.build-dependencies wget ca-certificates bash && \
@@ -16,9 +14,9 @@ RUN CONDA_VERSION="4.4.10" && \
     echo "export PATH=$CONDA_DIR/bin:\$PATH" > /etc/profile.d/conda.sh && \
     rm miniconda.sh && \
     \
-    conda update --yes conda && \
-    conda config --set auto_update_conda False && \
-    conda install --name=base --channel=anjos popster=1.2.3 && \
+    $CONDA_DIR/bin/conda update --yes conda && \
+    $CONDA_DIR/bin/conda config --set auto_update_conda False && \
+    $CONDA_DIR/bin/conda install --name=base --channel=anjos popster=1.2.4 && \
     rm -r "$CONDA_DIR/pkgs/" && \
     \
     apk del --purge .build-dependencies && \
