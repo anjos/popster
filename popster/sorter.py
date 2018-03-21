@@ -15,7 +15,7 @@ import smtplib
 import datetime
 import platform
 import subprocess
-
+import pkg_resources
 import email.mime.text
 
 import logging
@@ -601,7 +601,11 @@ class Email(object):
 
   def __init__(self, subject, body, sender=EMAIL_SENDER, to=EMAIL_RECEIVERS):
 
-    self.subject = subject
+    # get information from package and host, put on header
+    prefix = '[popster-%s@%s] ' % (pkg_resources.require('popster')[0].version,
+        os.environ.get('HOSTNAME', 'docker'))
+
+    self.subject = prefix + subject
     self.body = body
     self.sender = sender
     self.to = to
@@ -821,9 +825,9 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     # compose e-mail
     if not self.good:
-      subject = '[orquidea/photo] %(bad_len)d files may need manual intervention'
+      subject = '%(bad_len)d files may need manual intervention'
     else:
-      subject = '[orquidea/photo] Organized %(good_len)d files for you'
+      subject = 'Organized %(good_len)d files for you'
 
     body = 'Hello,\n' \
         '\n' \
