@@ -120,14 +120,17 @@ Docker Image Building
 
 To build a readily deployable docker image, do::
 
-  $ docker build -t anjos/popster:vX.Y.Z .
+  $ docker build --rm -t anjos/popster:latest .
   $ #upload it like this:
-  $ docker push anjos/popster:vX.Y.Z
+  $ docker push anjos/popster:latest
+
 
 .. note::
 
    Before running the above command, make sure to tag this package
    appropriately and to build and deploy conda packages for such a release.
+   Also build the equivalent version-named container using ``-t
+   anjos/popster:vX.Y.Z``.
 
 
 Deployment
