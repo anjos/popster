@@ -28,7 +28,7 @@ echo "Contents of \`${condarc}':"
 cat ${condarc}
 
 # updates conda installation
-${conda_dir}/bin/conda install python conda=4.4 curl conda-build=3
+${conda_dir}/bin/conda install -n base conda conda-build
 
 # cleans up
 ${conda_dir}/bin/conda clean --lock
