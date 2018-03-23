@@ -1,9 +1,8 @@
-{% set name="popster" %}
-{% set version="1.2.5" %}
+{% set data = load_setup_py_data() %}
 
 package:
-  name: {{ name }}
-  version: {{ version }}
+  name: {{ data['name'] }}
+  version: {{ data['version'] }}
 
 source:
   path: ../
@@ -32,7 +31,7 @@ requirements:
 
 test:
   imports:
-    - {{ name }}
+    - {{ data['name'] }}
 
   requires:
     - nose
@@ -41,7 +40,7 @@ test:
   commands:
     - watch --help
     - check_date --help
-    - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
+    - nosetests -sv --with-coverage --cover-package={{ data['name'] }} {{ data['name'] }}
 
 about:
   home: https://github.com/anjos/popster
