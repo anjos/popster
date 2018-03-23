@@ -455,7 +455,7 @@ def test_watch():
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, server='smtp.gmail.com', port=587,
+        email=False, hostname='docker', server='smtp.gmail.com', port=587,
         username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 
@@ -514,7 +514,7 @@ def test_watch_move():
       TemporaryDirectory() as dst:
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, server='smtp.gmail.com', port=587,
+        email=False, hostname='docker', server='smtp.gmail.com', port=587,
         username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 
@@ -580,7 +580,7 @@ def test_start_with_files():
       os.unlink(os.path.join(base, k))
 
     sorter = Sorter(base, dst, fmt, nodate='nodate', move=True, dry=False,
-        email=False, server='smtp.gmail.com', port=587,
+        email=False, hostname='docker', server='smtp.gmail.com', port=587,
         username='dummy@gmail.com', password='there-you-go', idleness=1)
     sorter.start()
 

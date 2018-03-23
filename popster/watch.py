@@ -20,6 +20,8 @@ Options:
                               be used verbatim in case a date cannot be
                               retrieved from the source filename
                               [default: Sem Data]
+  -H, --hostname=<name>       Use this name as hostname instead of the
+                              environment's [default: %(hostname)s]
   -n, --dry-run               If set, just tell what it would do instead of
                               doing it. This flag is good for testing.
   -e, --email                 If set, e-mail agents responsible every time
@@ -69,11 +71,13 @@ def main(user_input=None):
     argv = sys.argv[1:]
 
   import docopt
+  import socket
   import pkg_resources
 
   completions = dict(
       prog=os.path.basename(sys.argv[0]),
-      version=pkg_resources.require('popster')[0].version
+      version=pkg_resources.require('popster')[0].version,
+      hostname=socket.gethostname(),
       )
 
   args = docopt.docopt(
@@ -86,7 +90,7 @@ def main(user_input=None):
   logger = setup_logger('popster', args['--verbose'])
 
   logger.info("Popster version %s (running on %s)",
-      (completions['version'], os.environ.get('HOSTNAME', 'docker')))
+      (completions['version'], args['--hostname']))
   logger.info("Watching for photos/movies on: %s", args['--source'])
   logger.info("Moving photos/movies to: %s", args['--dest'])
   logger.info("Folder format set to: %s", args['--folder-format'])
@@ -109,6 +113,7 @@ def main(user_input=None):
       move=not(args['--copy']),
       dry=args['--dry-run'],
       email=args['--email'],
+      hostname=args['--hostname'],
       server=args['--server'],
       port=int(args['--port']),
       username=args['--username'],

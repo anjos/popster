@@ -165,19 +165,6 @@ password (to avoid 2-factor authentication). ``popster`` should handle this
 flawlessly. Other e-mail providers should also be reacheable in the same way.
 
 
-Setting the HOSTNAME
-====================
-
-Popster uses the value of the environment variable HOSTNAME to prefix each sent
-e-mail subject with ``[popster-<version>@<hostname>]``. By default, Docker set
-the hostname of containers to their hashed identifiers and you may want to set
-that. To do so, you should either set the `environment variable
-<https://docs.docker.com/engine/reference/run/#env-environment-variables>`_
-``HOSTNAME`` to the desired value or start your container with  `--hostname` in
-the `network settings
-<https://docs.docker.com/engine/reference/run/#network-settings>`_.
-
-
 .. Place your references after this line
 .. _conda: http://conda.pydata.org/miniconda.html
 .. _mediainfo: https://mediaarea.net/en/MediaInfo

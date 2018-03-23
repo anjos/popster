@@ -24,9 +24,6 @@ RUN CONDA_DIR="/opt/conda" && \
     mkdir -p "$CONDA_DIR/locks" && \
     chmod 777 "$CONDA_DIR/locks"
 
-# Environments we absorb
-ENV HOSTNAME="orquidea"
-
 # Export this command
 ENTRYPOINT ["/opt/conda/bin/watch"]
 CMD ["--help"]

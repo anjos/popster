@@ -593,17 +593,21 @@ class Email(object):
 
     body (str): The e-mail body
 
+    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
+      e-mail headers.
+
     sender (str, Optional): The e-mail sender
 
     to (str, Optional): The e-mail receiver
 
   '''
 
-  def __init__(self, subject, body, sender=EMAIL_SENDER, to=EMAIL_RECEIVERS):
+  def __init__(self, subject, body, hostname, sender=EMAIL_SENDER,
+      to=EMAIL_RECEIVERS):
 
     # get information from package and host, put on header
     prefix = '[popster-%s@%s] ' % (pkg_resources.require('popster')[0].version,
-        os.environ.get('HOSTNAME', 'docker'))
+        hostname)
 
     self.subject = prefix + subject
     self.body = body
@@ -657,9 +661,12 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     dry (bool): If set to ``True``, then it will not copy anything, just log.
 
+    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
+      e-mail headers.
+
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry):
+  def __init__(self, base, dst, fmt, nodate, move, dry, hostname):
 
     super(Handler, self).__init__(
         patterns = ['*%s' % k for k in EXTENSIONS],
@@ -674,6 +681,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.nodate = nodate
     self.move = move
     self.dry = dry
+    self.hostname = hostname
 
     from threading import RLock
     self.queue_lock = RLock()
@@ -858,7 +866,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     body = body % completions
     subject = subject % completions
 
-    email = Email(subject, body)
+    email = Email(subject, body, self.hostname)
     return email
 
 
@@ -888,6 +896,9 @@ class Sorter(object):
 
     email (bool): If set to ``True``, then e-mail admins about results.
 
+    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
+      e-mail headers.
+
     server (str): Hostname of the SMTP server to use for sending e-mails
 
     port (int): Port to use on the host above for sending e-mails
@@ -901,12 +912,13 @@ class Sorter(object):
 
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry, email, server, port,
-      username, password, idleness):
+  def __init__(self, base, dst, fmt, nodate, move, dry, email, hostname,
+      server, port, username, password, idleness):
 
     self.observer = watchdog.observers.Observer()
-    self.handler = Handler(base, dst, fmt, nodate, move, dry)
+    self.handler = Handler(base, dst, fmt, nodate, move, dry, hostname)
     self.email = email
+    self.hostname = hostname
     self.server = server
     self.port = port
     self.username = username
