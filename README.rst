@@ -30,8 +30,8 @@ command line::
 
   $ conda create --override-channels -c anjos -c defaults -n popster python=x.y popster
 
-Where ``x.y`` can be either ``2.7``, ``3.5`` or ``3.6``. Once the environment
-is installed, activate it to be able to call binaries::
+Where ``x.y`` can be either ``2.7`` or ``3.6``. Once the environment is
+installed, activate it to be able to call binaries::
 
   $ source activate popster
 
@@ -44,21 +44,6 @@ There is a single program that you can launch as a daemon on your system::
   $ ./bin/watch --help
 
 And a complete help message will be displayed.
-
-.. note::
-
-   Sending e-mail requires you to make the application ``sendmail`` functional.
-   There are 2 possibilities:
-
-   1. You succeed in configuring the SSMTP client available on the QNAP server,
-      by editing the file ``/etc/default_config/ssmtp/ssmtp.conf``. There are
-      some good tutorials on the internet on how to configure SSMTP. For
-      example, checkout `this one on the Ubuntu website
-      <https://help.ubuntu.com/community/EmailAlerts>`_
-   2. You have `Entware <https://github.com/Entware-ng/Entware-ng>`_ installed
-      and install the package ``msmtp``, which fulfills the same role. Make
-      sure to either have a ``.msmtprc`` file on your account, or access to the
-      global ``/opt/etc/msmtprc`` file.
 
 
 Development
@@ -99,8 +84,8 @@ prepare::
 
 Then, you can build dependencies one by one, in order::
 
-  $ conda-build deps/mediainfo
-  $ for v in 2.7 3.6; do for p in deps/pymediainfo deps/exifread deps/argh deps/pathtools deps/watchdog conda; do conda-build $p --python=$v; done; done
+  $ vi ./scripts/conda-build-all.sh #comment/uncomment what to compile
+  $ ./scripts/conda-build-all.sh
 
 
 Anaconda Uploads
