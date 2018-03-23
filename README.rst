@@ -96,8 +96,8 @@ everytime), do::
 
   $ anaconda login
   # enter credentials
-  $ anaconda upload <conda-bld>/<os>/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/<os>/{pymediainfo,exifread,argh,pathtools,watchdog,popster}-*.tar.bz2
+  $ anaconda upload <conda-bld>/*-64/mediainfo-*.tar.bz2
+  $ anaconda upload <conda-bld>/*-64/{pymediainfo,exifread,argh,pathtools,watchdog,popster}-*.tar.bz2
 
 
 Docker Image Building
