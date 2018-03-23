@@ -100,7 +100,7 @@ def main(user_input=None):
   if args['--email']:
     logger.info("Sending **real** e-mails")
   else:
-    logger.info("Only logging e-mails, **not** sending anthing")
+    logger.info("Only logging e-mails, **not** sending anything")
 
   check_point = int(args['--check-point'])
   idleness = int(args['--idleness'])
