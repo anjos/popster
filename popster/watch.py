@@ -96,7 +96,7 @@ def main(user_input=None):
   logger = setup_logger('popster', args['--verbose'])
 
   logger.info("Popster version %s (running on %s)",
-      (completions['version'], args['--hostname']))
+      completions['version'], args['--hostname'])
   logger.info("Watching for photos/movies on: %s", args['--source'])
   logger.info("Moving photos/movies to: %s", args['--dest'])
   logger.info("Folder format set to: %s", args['--folder-format'])
