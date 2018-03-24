@@ -103,14 +103,6 @@ def _ignore_file(path, f):
   return False
 
 
-EMAIL_SENDER = 'Andre Anjos <andre.dos.anjos@gmail.com>'
-EMAIL_RECEIVERS = [
-    'Andre Anjos <andre.dos.anjos@gmail.com>',
-    'Ana Carolina Anjos <ana.carolina.anjos@gmail.com>',
-    ]
-"""E-mail sender and receivers for informative actions"""
-
-
 class DateReadoutError(IOError):
   """Exception raised in case :py:func:`read_creation_date` returns an error"""
   pass
@@ -593,17 +585,16 @@ class Email(object):
 
     body (str): The e-mail body
 
-    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
-      e-mail headers.
+    hostname (str): The value of hostname to use for e-mail headers.
 
-    sender (str, Optional): The e-mail sender
+    sender (str): The e-mail sender. E.g.: ``John Doe <joe@example.com>``
 
-    to (str, Optional): The e-mail receiver
+    to (list): The e-mail receiver(s). E.g.:
+      ``Alice Allison <alice@example.com>``
 
   '''
 
-  def __init__(self, subject, body, hostname, sender=EMAIL_SENDER,
-      to=EMAIL_RECEIVERS):
+  def __init__(self, subject, body, hostname, sender, to):
 
     # get information from package and host, put on header
     prefix = '[popster-%s@%s] ' % (pkg_resources.require('popster')[0].version,
@@ -661,12 +652,16 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
     dry (bool): If set to ``True``, then it will not copy anything, just log.
 
-    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
-      e-mail headers.
+    hostname (str): The value of hostname to use for e-mail headers.
+
+    sender (str): The e-mail sender. E.g.: ``John Doe <joe@example.com>``
+
+    to (list): The e-mail receiver(s). E.g.:
+      ``Alice Allison <alice@example.com>``
 
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry, hostname):
+  def __init__(self, base, dst, fmt, nodate, move, dry, hostname, sender, to):
 
     super(Handler, self).__init__(
         patterns = ['*%s' % k for k in EXTENSIONS],
@@ -682,6 +677,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.move = move
     self.dry = dry
     self.hostname = hostname
+    self.sender = sender
+    self.to = to
 
     from threading import RLock
     self.queue_lock = RLock()
@@ -866,7 +863,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     body = body % completions
     subject = subject % completions
 
-    email = Email(subject, body, self.hostname)
+    email = Email(subject, body, self.hostname, self.sender, self.to)
     return email
 
 
@@ -896,8 +893,12 @@ class Sorter(object):
 
     email (bool): If set to ``True``, then e-mail admins about results.
 
-    hostname (str): The value of hostname (instead of $HOSTNAME) to use for
-      e-mail headers.
+    hostname (str): The value of hostname to use for e-mail headers.
+
+    sender (str): The e-mail sender. E.g.: ``John Doe <joe@example.com>``
+
+    to (list): The e-mail receiver(s). E.g.:
+      ``Alice Allison <alice@example.com>``
 
     server (str): Hostname of the SMTP server to use for sending e-mails
 
@@ -913,12 +914,12 @@ class Sorter(object):
   '''
 
   def __init__(self, base, dst, fmt, nodate, move, dry, email, hostname,
-      server, port, username, password, idleness):
+      sender, to, server, port, username, password, idleness):
 
     self.observer = watchdog.observers.Observer()
-    self.handler = Handler(base, dst, fmt, nodate, move, dry, hostname)
+    self.handler = Handler(base, dst, fmt, nodate, move, dry, hostname, sender,
+        to)
     self.email = email
-    self.hostname = hostname
     self.server = server
     self.port = port
     self.username = username

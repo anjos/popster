@@ -19,7 +19,7 @@ Options:
   -N, --no-date-path=<str>    A string with the name of a directory that will
                               be used verbatim in case a date cannot be
                               retrieved from the source filename
-                              [default: Sem Data]
+                              [default: nodate]
   -H, --hostname=<name>       Use this name as hostname instead of the
                               environment's [default: %(hostname)s]
   -n, --dry-run               If set, just tell what it would do instead of
@@ -43,17 +43,23 @@ Options:
   -P, --port=<port>           Port to use on the server [default: 587]
   -u, --username=<name>       Username for the SMTP authentication
   -w, --password=<pwd>        Password for the SMTP authentication
+  -F, --sender=<user>         The value to be used for the "From:" e-mail
+                              field, if we should send them. E.g.:
+                              "John Doe <john.doe@example.com>"
+  -T, --to=<u1,u2,...>        A comma-separated list of users to send e-mails
+                              to, if we should send them. E.g.:
+                              "U1 <u1@example.com>,U2 <u2@example.com>"
 
 
 Examples:
 
   1. Test what would do:
 
-     $ %(prog)s -vv --email --dry-run
+     $ %(prog)s -vv --email --sender=joe@example.com --to=alice@example.com --dry-run
 
   2. Runs the program and e-mails when done:
 
-     $ %(prog)s -vv --email --username=me@gmail.com --password=secret
+     $ %(prog)s -vv --email --username=me@gmail.com --password=secret --sender=bob@example.com --to='alice@example.com,jack@example.com'
 
 """
 
@@ -101,6 +107,8 @@ def main(user_input=None):
     logger.info("Sending **real** e-mails")
   else:
     logger.info("Only logging e-mails, **not** sending anything")
+  logger.info("E-mail From: %s", args['--sender'])
+  logger.info("E-mail To: %s", args['--to'])
 
   check_point = int(args['--check-point'])
   idleness = int(args['--idleness'])
@@ -114,6 +122,8 @@ def main(user_input=None):
       dry=args['--dry-run'],
       email=args['--email'],
       hostname=args['--hostname'],
+      sender=args['--sender'],
+      to=[k.strip() for k in args['--to'].split(',')],
       server=args['--server'],
       port=int(args['--port']),
       username=args['--username'],
