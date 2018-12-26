@@ -121,7 +121,7 @@ def main(user_input=None):
   idleness = int(args['--idleness'])
 
   if args['--email']:
-    to=[k.strip() for k in args['--to'].split(',')],
+    to=[k.strip() for k in args['--to'].split(',')]
   else:
     to=[]
 
