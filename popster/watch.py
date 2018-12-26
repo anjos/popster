@@ -49,6 +49,11 @@ Options:
   -T, --to=<u1,u2,...>        A comma-separated list of users to send e-mails
                               to, if we should send them. E.g.:
                               "U1 <u1@example.com>,U2 <u2@example.com>"
+  -X, --filesystem-timestamp  If set, and if no creation time date is found on
+                              the traditional object metadata, then organizes
+                              images using the filesystem timestamp - first try
+                              the creation time if available, else the
+                              last modification time.
 
 
 Examples:
@@ -100,6 +105,8 @@ def main(user_input=None):
   logger.info("Watching for photos/movies on: %s", args['--source'])
   logger.info("Moving photos/movies to: %s", args['--dest'])
   logger.info("Folder format set to: %s", args['--folder-format'])
+  logger.info("Default to filesystem timestamps: %s",
+      args['--filesystem-timestamp'])
   logger.info("No-date path set to: %s", args['--no-date-path'])
   logger.info("Checkpoint timeout: %s seconds", args['--check-point'])
   logger.info("Idle time set to: %s seconds", args['--idleness'])
@@ -117,6 +124,7 @@ def main(user_input=None):
       base=args['--source'],
       dst=args['--dest'],
       fmt=args['--folder-format'],
+      timestamp=args['--filesystem-timestamp'],
       nodate=args['--no-date-path'],
       move=not(args['--copy']),
       dry=args['--dry-run'],

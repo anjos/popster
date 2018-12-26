@@ -38,6 +38,7 @@ EXTENSIONS=[
     '.mp4', #canon powershot g7 x mark ii
     '.mov', #iphone, powershot sx230 hs, canon eos 500d
     '.m4v', #ipod encoded clips
+    '.aae', #editing information for iPhone Photos app
     ]
 """List of extensions supported by this program (lower-case)"""
 
@@ -254,10 +255,78 @@ def _video_read_creation_date(path):
 
   """
 
+  def _convert_attr(obj, attr, fmt):
+    return datetime.datetime.strptime(getattr(obj, attr), fmt)
+
   try:
-    return datetime.datetime.strptime(MediaInfo.parse(path).tracks[0].encoded_date, '%Z %Y-%m-%d %H:%M:%S')
+    obj = MediaInfo.parse(path)
+    track = obj.tracks[0]
+
+    use_mtime = False
+
+    if hasattr(track, 'file_last_modification_date'):
+      use_mtime = True
+      date = _convert_attr(track, 'file_last_modification_date',
+          '%Z %Y-%m-%d %H:%M:%S')
+
+    if hasattr(track, 'encoded_date'):
+      new_date = _convert_attr(track, 'encoded_date', '%Z %Y-%m-%d %H:%M:%S')
+      # encoding date has priority
+      if new_date < date:
+        use_mtime = False
+        date = new_date
+
+    if hasattr(track, 'tagged_date'):
+      new_date = _convert_attr(track, 'tagged_date', '%Z %Y-%m-%d %H:%M:%S')
+      # tagged date has priority
+      if new_date < date:
+        use_mtime = False
+        date = new_date
+
+    if date is None:
+      raise DateReadoutError('cannot find date at metadata from %s' % path)
+
+    if use_mtime == True and \
+        hasattr(track, 'file_last_modification_date__local'):
+      # prefer local date value
+      date = _convert_attr(track, 'file_last_modification_date__local',
+          '%Y-%m-%d %H:%M:%S')
+
+    return date
+
   except Exception as e:
     raise DateReadoutError(str(e))
+
+
+def file_timestamp(path):
+  """Retrieves the best possible filesystem timestamp from the input file
+
+  Try to get the date that a file was created, falling back to when it was last
+  modified if that isn't possible.  See
+  http://stackoverflow.com/a/39501288/1709587 for explanation.
+
+  Parameters:
+
+    path (str): A full-path leading to the file to read the data from
+
+
+  Returns:
+
+    datetime.datetime: A standard library date-time object representing the
+      time the object was created
+
+  """
+
+  if platform.system() == 'Windows':
+    return datetime.datetime.fromtimestamp(os.path.getctime(path))
+  else:
+    stat = os.stat(path)
+    try:
+      return datetime.datetime.fromtimestamp(stat.st_birthtime)
+    except AttributeError:
+      # We're probably on Linux. No easy way to get creation dates here,
+      # so we'll settle for when its content was last modified.
+      return datetime.datetime.fromtimestamp(stat.st_mtime)
 
 
 CREATION_DATE_READER={
@@ -270,6 +339,7 @@ CREATION_DATE_READER={
     '.mp4': _video_read_creation_date,
     '.mov': _video_read_creation_date,
     '.m4v': _video_read_creation_date,
+    '.aae': file_timestamp,
     }
 """For each supported extension, uses a specific reader for its date"""
 
@@ -413,7 +483,7 @@ def _copy_file(src, dst, move, dry):
     logger.info("chmod %s %s", oct(perms), dst)
 
 
-def copy(src, dst, fmt, nodate, move, dry):
+def copy(src, dst, fmt, timestamp, nodate, move, dry):
   """Copies a single source file to a destination directory
 
   This function performs 4 distinct tasks:
@@ -435,8 +505,16 @@ def copy(src, dst, fmt, nodate, move, dry):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    timestamp (bool): If set, and if no creation time date is found on the
+      traditional object metadata, then organizes images using the filesystem
+      timestamp - first try the creation time if available, else the last
+      modification time.
+
     nodate (str): A string with the name of a directory that will be used
-      verbatim in case a date cannot be retrieved from the source filename
+      verbatim in case a date cannot be retrieved from the source filename.
+      This setting is (naturally) affected by the ``timestamp`` parameter above
+      - if that is set (to ``True``), then dates will always be attributed to
+        all files
 
     move (bool): If set to `True`, move instead of copying. Otherwise, just
       copy the files
@@ -472,7 +550,11 @@ def copy(src, dst, fmt, nodate, move, dry):
     date = read_creation_date(src)
     dst_dirname = date.strftime(fmt).lower()
   except DateReadoutError:
-    dst_dirname = nodate
+    if timestamp:
+      date = file_timestamp(src)
+      dst_dirname = date.strftime(fmt).lower()
+    else:
+      dst_dirname = nodate
 
   # 3. move file to destination directory
   dst_path = make_dirs(dst, dst_dirname, dry)
@@ -489,7 +571,7 @@ def copy(src, dst, fmt, nodate, move, dry):
   return dst_filename
 
 
-def rcopy(base, dst, fmt, nodate, move, dry):
+def rcopy(base, dst, fmt, timestamp, nodate, move, dry):
   """Recursively copies all files found under a given base directory
 
   This function recursively treats all files found in the source directory. It
@@ -510,8 +592,16 @@ def rcopy(base, dst, fmt, nodate, move, dry):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    timestamp (bool): If set, and if no creation time date is found on the
+      traditional object metadata, then organizes images using the filesystem
+      timestamp - first try the creation time if available, else the last
+      modification time.
+
     nodate (str): A string with the name of a directory that will be used
-      verbatim in case a date cannot be retrieved from the source filename
+      verbatim in case a date cannot be retrieved from the source filename.
+      This setting is (naturally) affected by the ``timestamp`` parameter above
+      - if that is set (to ``True``), then dates will likely be attributed to
+        all files
 
     move (bool): If set to ``True``, move instead of copying
 
@@ -557,7 +647,8 @@ def rcopy(base, dst, fmt, nodate, move, dry):
         _rmfile(filepath, dry)
         continue
       try:
-        good.append(copy(os.path.join(path, f), dst, fmt, nodate, move, dry))
+        good.append(copy(os.path.join(path, f), dst, fmt, timestamp, nodate,
+          move, dry))
       except ExplicitIgnore as e:
         action = 'copy' if not move else 'move'
         logger.debug('explicitly ignoring file during %s operation: %s', e,
@@ -645,8 +736,16 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    timestamp (bool): If set, and if no creation time date is found on the
+      traditional object metadata, then organizes images using the filesystem
+      timestamp - first try the creation time if available, else the last
+      modification time.
+
     nodate (str): A string with the name of a directory that will be used
-      verbatim in case a date cannot be retrieved from the source filename
+      verbatim in case a date cannot be retrieved from the source filename.
+      This setting is (naturally) affected by the ``timestamp`` parameter above
+      - if that is set (to ``True``), then dates will always be attributed to
+        all files
 
     move (bool): If set to ``True``, move instead of copying
 
@@ -661,7 +760,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
 
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry, hostname, sender, to):
+  def __init__(self, base, dst, fmt, timestamp, nodate, move, dry, hostname,
+      sender, to):
 
     super(Handler, self).__init__(
         patterns = ['*%s' % k for k in EXTENSIONS],
@@ -673,6 +773,7 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     self.base = base
     self.dst = dst
     self.fmt = fmt
+    self.timestamp = timestamp
     self.nodate = nodate
     self.move = move
     self.dry = dry
@@ -809,8 +910,8 @@ class Handler(watchdog.events.PatternMatchingEventHandler):
     # process local queue copy - deletions are no longer possible
     for path in local_queue:
       try:
-        self.good.append(copy(path, self.dst, self.fmt, self.nodate, self.move,
-          self.dry))
+        self.good.append(copy(path, self.dst, self.fmt, self.timestamp,
+          self.nodate, self.move, self.dry))
       except ExplicitIgnore as e:
         action = 'copy' if not self.move else 'move'
         logger.debug('explicitly ignoring file during %s operation: %s', e,
@@ -884,8 +985,16 @@ class Sorter(object):
       example: ``"%Y/%B/%d.%m.%Y"``. For information on date fields that be
       used, please refer to :py:func:`time.strftime`.
 
+    timestamp (bool): If set, and if no creation time date is found on the
+      traditional object metadata, then organizes images using the filesystem
+      timestamp - first try the creation time if available, else the last
+      modification time.
+
     nodate (str): A string with the name of a directory that will be used
-      verbatim in case a date cannot be retrieved from the source filename
+      verbatim in case a date cannot be retrieved from the source filename.
+      This setting is (naturally) affected by the ``timestamp`` parameter above
+      - if that is set (to ``True``), then dates will always be attributed to
+        all files
 
     move (bool): If set to ``True``, move instead of copying
 
@@ -913,12 +1022,12 @@ class Sorter(object):
 
   '''
 
-  def __init__(self, base, dst, fmt, nodate, move, dry, email, hostname,
-      sender, to, server, port, username, password, idleness):
+  def __init__(self, base, dst, fmt, timestamp, nodate, move, dry, email,
+      hostname, sender, to, server, port, username, password, idleness):
 
     self.observer = watchdog.observers.Observer()
-    self.handler = Handler(base, dst, fmt, nodate, move, dry, hostname, sender,
-        to)
+    self.handler = Handler(base, dst, fmt, timestamp, nodate, move, dry,
+        hostname, sender, to)
     self.email = email
     self.server = server
     self.port = port

@@ -1,7 +1,6 @@
 name: popster-dev
 channels:
 - anjos
-- https://www.idiap.ch/software/bob/conda/label/beta
 - https://www.idiap.ch/software/bob/conda
 - defaults
 dependencies:

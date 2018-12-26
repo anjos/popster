@@ -58,9 +58,15 @@ def main(user_input=None):
       version=completions['version'],
       )
 
+  from .sorter import setup_logger
+  logger = setup_logger('popster', args['--verbose'])
 
-  from .sorter import read_creation_date
+  from .sorter import read_creation_date, file_timestamp, DateReadoutError
 
   for path in args['<path>']:
-    date = read_creation_date(path)
+    try:
+      date = read_creation_date(path)
+    except DateReadoutError:
+      logger.warn('no date metadata at %s - returning creation date' % path)
+      date = file_timestamp(path)
     print('%s: %s' % (path, date))
