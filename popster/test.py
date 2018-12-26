@@ -12,6 +12,9 @@ import pkg_resources
 
 import nose.tools
 
+# date used for testing purposes
+DUMMY_DATE = datetime.datetime(2002, 1, 26, 11, 49, 44)
+
 # work around to get TemporaryDirectory even in Python 2.x
 import six
 if six.PY2:
@@ -50,9 +53,14 @@ def test_png_readout():
 def test_aae_readout():
 
   # Tests one extract the proper date from a aae file
+  f = data_path('editing_info.aae')
+  # we'll set this as the creation/modification time on the file
+  # since otherwise tests won't pass on a fresh checkout of this package
+  _time = time.mktime(DUMMY_DATE.timetuple())
+  os.utime(f, (_time, _time))
 
   date = read_creation_date(data_path('editing_info.aae'))
-  nose.tools.eq_(date, datetime.datetime(2018, 12, 26, 11, 49, 44, 784996))
+  nose.tools.eq_(date, DUMMY_DATE)
 
 
 def test_movie_readout():
@@ -376,7 +384,7 @@ def test_move_many():
       os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
-      os.path.join('2018', 'december', '26.12.2018', 'editing_info.aae'),
+      os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
@@ -423,7 +431,7 @@ def test_move_all():
       os.path.join('2017', 'august', '29.08.2017', 'img_with_xmp.png'),
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
-      os.path.join('2018', 'december', '26.12.2018', 'editing_info.aae'),
+      os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
