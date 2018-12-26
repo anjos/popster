@@ -61,7 +61,7 @@ Build
 To build the project and make it ready to run, do::
 
   $ source activate popster-dev
-  $ buildout
+  (popster-dev) $ buildout
 
 This command should leave you with a functional environment.
 
@@ -71,7 +71,7 @@ Testing
 
 To test the package, run the following::
 
-  $ ./bin/nosetests -sv --with-coverage --cover-package=popster
+  (popster-dev) $ ./bin/nosetests -sv --with-coverage --cover-package=popster
 
 
 Conda Builds
@@ -80,12 +80,14 @@ Conda Builds
 Building dependencies requires you install ``conda-build``. Do the following to
 prepare::
 
-  $ conda install -n root conda-build anaconda-client
+  $ conda activate base
+  (base) $ conda install conda-build anaconda-client
 
 Then, you can build dependencies one by one, in order::
 
   $ vi ./scripts/conda-build-all.sh #comment/uncomment what to compile
-  $ ./scripts/conda-build-all.sh
+  $ conda activate base
+  (base) $ ./scripts/conda-build-all.sh
 
 
 Anaconda Uploads
