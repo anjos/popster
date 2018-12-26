@@ -1,2 +1,2 @@
 include COPYING README.rst buildout.cfg
-recursive-include popster/data *.jpg *.png *.mp4 *.txt
+recursive-include popster/data *.jpg *.png *.mp4 *.txt *.aae
