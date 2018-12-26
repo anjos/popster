@@ -1,6 +1,6 @@
 {% set name="pymediainfo" %}
-{% set version="2.2.1" %}
-{% set md5="b46e9774fc3091abae3fcae38769d41f" %}
+{% set version="3.0" %}
+{% set sha256="e76cc5525c3fc5cba61073e12365dc06f303b261d8f923aaa6eac09bf8fab245" %}
 
 package:
   name: {{ name | lower }}
@@ -9,7 +9,7 @@ package:
 source:
   fn: {{ name }}-{{ version }}.tar.gz
   url: https://pypi.io/packages/source/p/{{ name }}/{{ name }}-{{ version }}.tar.gz
-  md5: {{ md5 }}
+  sha256: {{ sha256 }}
 
 build:
   number: 0
@@ -19,6 +19,7 @@ requirements:
   build:
     - python
     - setuptools
+    - setuptools_scm
 
   run:
     - python
