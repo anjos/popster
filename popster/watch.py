@@ -120,6 +120,11 @@ def main(user_input=None):
   check_point = int(args['--check-point'])
   idleness = int(args['--idleness'])
 
+  if args['--email']:
+    to=[k.strip() for k in args['--to'].split(',')],
+  else:
+    to=[]
+
   the_sorter = Sorter(
       base=args['--source'],
       dst=args['--dest'],
@@ -131,7 +136,7 @@ def main(user_input=None):
       email=args['--email'],
       hostname=args['--hostname'],
       sender=args['--sender'],
-      to=[k.strip() for k in args['--to'].split(',')],
+      to=to,
       server=args['--server'],
       port=int(args['--port']),
       username=args['--username'],
