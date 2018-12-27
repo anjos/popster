@@ -50,6 +50,14 @@ def test_png_readout():
   nose.tools.eq_(date, datetime.datetime(2017, 8, 29, 16, 55, 32))
 
 
+def test_heic_readout():
+
+  # Tests one extract the proper date from a png file
+
+  date = read_creation_date(data_path('img.heic'))
+  nose.tools.eq_(date, datetime.datetime(2018, 12, 27, 11, 27, 26))
+
+
 def test_aae_readout():
 
   # Tests one extract the proper date from a aae file
@@ -376,6 +384,7 @@ def test_move_many():
       'mp4.mp4',
       'mp4.mp4',
       'editing_info.aae',
+      'img.heic',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
@@ -385,6 +394,7 @@ def test_move_many():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
+      os.path.join('2018', 'december', '27.12.2018', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
@@ -423,6 +433,7 @@ def test_move_all():
       'img_without_xmp.png',
       'mp4.mp4',
       'editing_info.aae',
+      'img.heic',
       ]
   good_src = [os.path.join(os.path.basename(data), k) for k in good_src]
   good_dst = [
@@ -432,6 +443,7 @@ def test_move_all():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
+      os.path.join('2018', 'december', '27.12.2018', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:

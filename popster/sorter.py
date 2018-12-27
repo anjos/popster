@@ -39,6 +39,7 @@ EXTENSIONS=[
     '.mov', #iphone, powershot sx230 hs, canon eos 500d
     '.m4v', #ipod encoded clips
     '.aae', #editing information for iPhone Photos app
+    '.heic', #high-efficiency image format (Apple)
     ]
 """List of extensions supported by this program (lower-case)"""
 
@@ -264,19 +265,19 @@ def _video_read_creation_date(path):
 
     use_mtime = False
 
-    if hasattr(track, 'file_last_modification_date'):
+    if getattr(track, 'file_last_modification_date'):
       use_mtime = True
       date = _convert_attr(track, 'file_last_modification_date',
           '%Z %Y-%m-%d %H:%M:%S')
 
-    if hasattr(track, 'encoded_date'):
+    if getattr(track, 'encoded_date'):
       new_date = _convert_attr(track, 'encoded_date', '%Z %Y-%m-%d %H:%M:%S')
       # encoding date has priority
       if new_date < date:
         use_mtime = False
         date = new_date
 
-    if hasattr(track, 'tagged_date'):
+    if getattr(track, 'tagged_date'):
       new_date = _convert_attr(track, 'tagged_date', '%Z %Y-%m-%d %H:%M:%S')
       # tagged date has priority
       if new_date < date:
@@ -287,10 +288,10 @@ def _video_read_creation_date(path):
       raise DateReadoutError('cannot find date at metadata from %s' % path)
 
     if use_mtime == True and \
-        hasattr(track, 'file_last_modification_date__local'):
-      # prefer local date value
-      date = _convert_attr(track, 'file_last_modification_date__local',
-          '%Y-%m-%d %H:%M:%S')
+        getattr(track, 'file_last_modification_date__local'):
+        # prefer local date value
+        date = _convert_attr(track, 'file_last_modification_date__local',
+            '%Y-%m-%d %H:%M:%S')
 
     return date
 
@@ -340,6 +341,7 @@ CREATION_DATE_READER={
     '.mov': _video_read_creation_date,
     '.m4v': _video_read_creation_date,
     '.aae': file_timestamp,
+    '.heic': _video_read_creation_date,
     }
 """For each supported extension, uses a specific reader for its date"""
 
