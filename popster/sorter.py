@@ -40,6 +40,7 @@ EXTENSIONS=[
     '.m4v', #ipod encoded clips
     '.aae', #editing information for iPhone Photos app
     '.heic', #high-efficiency image format (Apple)
+    '.heif', #high-efficiency image format (Apple)
     ]
 """List of extensions supported by this program (lower-case)"""
 
@@ -342,6 +343,7 @@ CREATION_DATE_READER={
     '.m4v': _video_read_creation_date,
     '.aae': file_timestamp,
     '.heic': _video_read_creation_date,
+    '.heif': _video_read_creation_date,
     }
 """For each supported extension, uses a specific reader for its date"""
 
