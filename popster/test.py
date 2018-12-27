@@ -52,10 +52,15 @@ def test_png_readout():
 
 def test_heic_readout():
 
-  # Tests one extract the proper date from a png file
+  # Tests one extract the proper date from a aae file
+  f = data_path('img.heic')
+  # we'll set this as the creation/modification time on the file
+  # since otherwise tests won't pass on a fresh checkout of this package
+  _time = time.mktime(DUMMY_DATE.timetuple())
+  os.utime(f, (_time, _time))
 
-  date = read_creation_date(data_path('img.heic'))
-  nose.tools.eq_(date, datetime.datetime(2018, 12, 27, 11, 27, 26))
+  date = read_creation_date(f)
+  nose.tools.eq_(date, DUMMY_DATE)
 
 
 def test_aae_readout():
@@ -394,7 +399,7 @@ def test_move_many():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
-      os.path.join('2018', 'december', '27.12.2018', 'img.heic'),
+      os.path.join('2002', 'january', '26.01.2002', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
@@ -443,7 +448,7 @@ def test_move_all():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
-      os.path.join('2018', 'december', '27.12.2018', 'img.heic'),
+      os.path.join('2002', 'january', '26.01.2002', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:

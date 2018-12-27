@@ -342,8 +342,8 @@ CREATION_DATE_READER={
     '.mov': _video_read_creation_date,
     '.m4v': _video_read_creation_date,
     '.aae': file_timestamp,
-    '.heic': _video_read_creation_date,
-    '.heif': _video_read_creation_date,
+    '.heic': file_timestamp,
+    '.heif': file_timestamp,
     }
 """For each supported extension, uses a specific reader for its date"""
 
