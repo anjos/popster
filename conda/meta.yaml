@@ -41,6 +41,7 @@ test:
   commands:
     - watch --help
     - check_date --help
+    - heic_to_jpeg --help
     - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
 
 about:

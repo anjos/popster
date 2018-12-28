@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 setup(
 
     name='popster',
-    version='1.3.2',
+    version='1.3.3',
     description="A pythonic photo importer for my QNAP NAS",
     url='https://github.com/anjos/popster',
     license="GPLv3",
@@ -32,6 +32,7 @@ setup(
       'console_scripts': [
         'watch = popster.watch:main',
         'check_date = popster.check_date:main',
+        'heic_to_jpeg = popster.heic_to_jpeg:main',
       ],
     },
 

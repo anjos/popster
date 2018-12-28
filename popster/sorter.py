@@ -14,7 +14,6 @@ import shutil
 import smtplib
 import datetime
 import platform
-import subprocess
 import pkg_resources
 import email.mime.text
 
