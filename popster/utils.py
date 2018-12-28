@@ -179,8 +179,8 @@ def heic_to_jpeg(sips, path, quality='best'):
       'best', '--out', output_path]
   run_cmdline(cmd)
 
-  # setup destination file to have the same modification time as source
-  _time = os.stat(path).st_mtime
-  os.utime(output_path, (_time, _time))
+  # setup destination file to have the same access/modification times as source
+  stat = os.stat(path)
+  os.utime(output_path, (stat.st_atime, stat.st_mtime))
 
   return output_path
