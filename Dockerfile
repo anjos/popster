@@ -2,8 +2,8 @@ FROM frolvlad/alpine-glibc:alpine-3.7
 
 # Install conda
 RUN CONDA_DIR="/opt/conda" && \
-    CONDA_VERSION="4.4.10" && \
-    CONDA_MD5_CHECKSUM="bec6203dbb2f53011e974e9bf4d46e93" && \
+    CONDA_VERSION="4.7.12" && \
+    CONDA_MD5_CHECKSUM="0dba759b8ecfc8948f626fa18785e3d8" && \
     \
     apk add --no-cache --virtual=.build-dependencies wget ca-certificates bash && \
     \
@@ -16,7 +16,7 @@ RUN CONDA_DIR="/opt/conda" && \
     \
     $CONDA_DIR/bin/conda update --yes conda && \
     $CONDA_DIR/bin/conda config --set auto_update_conda False && \
-    $CONDA_DIR/bin/conda install --name=base --channel=anjos popster=1.3.3 && \
+    $CONDA_DIR/bin/conda install --name=base --channel=anjos popster=1.4.0 && \
     rm -r "$CONDA_DIR/pkgs/" && \
     \
     apk del --purge .build-dependencies && \
