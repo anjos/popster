@@ -52,15 +52,10 @@ def test_png_readout():
 
 def test_heic_readout():
 
-  # Tests one extract the proper date from a aae file
-  f = data_path('img.heic')
-  # we'll set this as the creation/modification time on the file
-  # since otherwise tests won't pass on a fresh checkout of this package
-  _time = time.mktime(DUMMY_DATE.timetuple())
-  os.utime(f, (_time, _time))
+  # Tests one extract the proper date from a heic file
 
-  date = read_creation_date(f)
-  nose.tools.eq_(date, DUMMY_DATE)
+  date = read_creation_date(data_path('img.heic'))
+  nose.tools.eq_(date, datetime.datetime(2018, 12, 22, 10, 32, 34))
 
 
 def test_aae_readout():
