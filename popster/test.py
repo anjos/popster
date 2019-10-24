@@ -394,7 +394,7 @@ def test_move_many():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
-      os.path.join('2002', 'january', '26.01.2002', 'img.heic'),
+      os.path.join('2018', 'december', '22.12.2018', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
@@ -443,7 +443,7 @@ def test_move_all():
       os.path.join('nodate', 'img_without_xmp.png'),
       os.path.join('2005', 'october', '28.10.2005', 'mp4.mp4'),
       os.path.join('2002', 'january', '26.01.2002', 'editing_info.aae'),
-      os.path.join('2002', 'january', '26.01.2002', 'img.heic'),
+      os.path.join('2018', 'december', '22.12.2018', 'img.heic'),
       ]
 
   with TemporaryDirectory() as base, TemporaryDirectory() as dst:
