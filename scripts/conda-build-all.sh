@@ -10,8 +10,8 @@ python_versions=()
 python_versions+=('3.7')
 
 python_pkgs=()
-python_pkgs+=('deps/pymediainfo')
-#python_pkgs+=('conda') #popster itself
+#python_pkgs+=('deps/pymediainfo')
+python_pkgs+=('conda') #popster itself
 
 noarch_pkgs=()
 #noarch_pkgs+=('deps/exifread')
