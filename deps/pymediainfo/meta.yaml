@@ -1,6 +1,6 @@
 {% set name="pymediainfo" %}
-{% set version="3.0" %}
-{% set sha256="e76cc5525c3fc5cba61073e12365dc06f303b261d8f923aaa6eac09bf8fab245" %}
+{% set version="4.1" %}
+{% set sha256="ed6a8f3dcd255895021d40d1299be333a1bead3dbe8df4cbe1a863ba8fee1756" %}
 
 package:
   name: {{ name | lower }}
@@ -13,14 +13,13 @@ source:
 
 build:
   number: 0
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: python -m pip install --no-deps --ignore-installed .
 
 requirements:
-  build:
+  host:
     - python
-    - setuptools
+    - pip
     - setuptools_scm
-
   run:
     - python
     - mediainfo

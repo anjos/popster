@@ -7,16 +7,17 @@ simple_pkgs=()
 #simple_pkgs+=('deps/mediainfo')
 
 python_versions=()
-python_versions+=('2.7')
-python_versions+=('3.6')
+python_versions+=('3.7')
 
 python_pkgs=()
-#python_pkgs+=('deps/pymediainfo')
-#python_pkgs+=('deps/exifread')
-#python_pkgs+=('deps/argh')
-#python_pkgs+=('deps/pathtools')
-#python_pkgs+=('deps/watchdog')
-python_pkgs+=('conda') #popster itself
+python_pkgs+=('deps/pymediainfo')
+#python_pkgs+=('conda') #popster itself
+
+noarch_pkgs=()
+#noarch_pkgs+=('deps/exifread')
+#noarch_pkgs+=('deps/argh')
+#noarch_pkgs+=('deps/pathtools')
+#noarch_pkgs+=('deps/watchdog')
 
 for p in "${simple_pkgs[@]}"; do
   conda build --variant-config-files deps/conda_build_config.yaml ${p}
@@ -28,4 +29,8 @@ for pyver in "${python_versions[@]}"; do
     conda build --python=$pyver --variant-config-files deps/conda_build_config.yaml $p
     ${script_dir}/conda-build-docker.sh --python=$pyver /work/$p
   done
+done
+
+for p in "${noarch_pkgs[@]}"; do
+  conda build --variant-config-files deps/conda_build_config.yaml $p
 done
