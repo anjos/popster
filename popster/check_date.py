@@ -39,34 +39,35 @@ import sys
 
 def main(user_input=None):
 
-  if user_input is not None:
-    argv = user_input
-  else:
-    argv = sys.argv[1:]
+    if user_input is not None:
+        argv = user_input
+    else:
+        argv = sys.argv[1:]
 
-  import docopt
-  import pkg_resources
+    import docopt
+    import pkg_resources
 
-  completions = dict(
-      prog=os.path.basename(sys.argv[0]),
-      version=pkg_resources.require('popster')[0].version
-      )
+    completions = dict(
+        prog=os.path.basename(sys.argv[0]),
+        version=pkg_resources.require("popster")[0].version,
+    )
 
-  args = docopt.docopt(
-      __doc__ % completions,
-      argv=argv,
-      version=completions['version'],
-      )
+    args = docopt.docopt(
+        __doc__ % completions, argv=argv, version=completions["version"],
+    )
 
-  from .sorter import setup_logger
-  logger = setup_logger('popster', args['--verbose'])
+    from .sorter import setup_logger
 
-  from .sorter import read_creation_date, file_timestamp, DateReadoutError
+    logger = setup_logger("popster", args["--verbose"])
 
-  for path in args['<path>']:
-    try:
-      date = read_creation_date(path)
-    except DateReadoutError:
-      logger.warn('no date metadata at %s - returning creation date' % path)
-      date = file_timestamp(path)
-    print('%s: %s' % (path, date))
+    from .sorter import read_creation_date, file_timestamp, DateReadoutError
+
+    for path in args["<path>"]:
+        try:
+            date = read_creation_date(path)
+        except DateReadoutError:
+            logger.warn(
+                "no date metadata at %s - returning creation date" % path
+            )
+            date = file_timestamp(path)
+        print("%s: %s" % (path, date))

@@ -76,79 +76,82 @@ import time
 
 def main(user_input=None):
 
-  if user_input is not None:
-    argv = user_input
-  else:
-    argv = sys.argv[1:]
+    if user_input is not None:
+        argv = user_input
+    else:
+        argv = sys.argv[1:]
 
-  import docopt
-  import socket
-  import pkg_resources
+    import docopt
+    import socket
+    import pkg_resources
 
-  completions = dict(
-      prog=os.path.basename(sys.argv[0]),
-      version=pkg_resources.require('popster')[0].version,
-      hostname=socket.gethostname(),
-      )
+    completions = dict(
+        prog=os.path.basename(sys.argv[0]),
+        version=pkg_resources.require("popster")[0].version,
+        hostname=socket.gethostname(),
+    )
 
-  args = docopt.docopt(
-      __doc__ % completions,
-      argv=argv,
-      version=completions['version'],
-      )
+    args = docopt.docopt(
+        __doc__ % completions, argv=argv, version=completions["version"],
+    )
 
-  from .sorter import setup_logger, Sorter
-  logger = setup_logger('popster', args['--verbose'])
+    from .sorter import setup_logger, Sorter
 
-  logger.info("Popster version %s (running on %s)",
-      completions['version'], args['--hostname'])
-  logger.info("Watching for photos/movies on: %s", args['--source'])
-  logger.info("Moving photos/movies to: %s", args['--dest'])
-  logger.info("Folder format set to: %s", args['--folder-format'])
-  logger.info("Default to filesystem timestamps: %s",
-      args['--filesystem-timestamp'])
-  logger.info("No-date path set to: %s", args['--no-date-path'])
-  logger.info("Checkpoint timeout: %s seconds", args['--check-point'])
-  logger.info("Idle time set to: %s seconds", args['--idleness'])
-  if args['--email']:
-    logger.info("Sending **real** e-mails")
-  else:
-    logger.info("Only logging e-mails, **not** sending anything")
-  logger.info("E-mail From: %s", args['--sender'])
-  logger.info("E-mail To: %s", args['--to'])
+    logger = setup_logger("popster", args["--verbose"])
 
-  check_point = int(args['--check-point'])
-  idleness = int(args['--idleness'])
+    logger.info(
+        "Popster version %s (running on %s)",
+        completions["version"],
+        args["--hostname"],
+    )
+    logger.info("Watching for photos/movies on: %s", args["--source"])
+    logger.info("Moving photos/movies to: %s", args["--dest"])
+    logger.info("Folder format set to: %s", args["--folder-format"])
+    logger.info(
+        "Default to filesystem timestamps: %s", args["--filesystem-timestamp"]
+    )
+    logger.info("No-date path set to: %s", args["--no-date-path"])
+    logger.info("Checkpoint timeout: %s seconds", args["--check-point"])
+    logger.info("Idle time set to: %s seconds", args["--idleness"])
+    if args["--email"]:
+        logger.info("Sending **real** e-mails")
+    else:
+        logger.info("Only logging e-mails, **not** sending anything")
+    logger.info("E-mail From: %s", args["--sender"])
+    logger.info("E-mail To: %s", args["--to"])
 
-  if args['--email']:
-    to=[k.strip() for k in args['--to'].split(',')]
-  else:
-    to=[]
+    check_point = int(args["--check-point"])
+    idleness = int(args["--idleness"])
 
-  the_sorter = Sorter(
-      base=args['--source'],
-      dst=args['--dest'],
-      fmt=args['--folder-format'],
-      timestamp=args['--filesystem-timestamp'],
-      nodate=args['--no-date-path'],
-      move=not(args['--copy']),
-      dry=args['--dry-run'],
-      email=args['--email'],
-      hostname=args['--hostname'],
-      sender=args['--sender'],
-      to=to,
-      server=args['--server'],
-      port=int(args['--port']),
-      username=args['--username'],
-      password=args['--password'],
-      idleness=idleness,
-      )
+    if args["--email"]:
+        to = [k.strip() for k in args["--to"].split(",")]
+    else:
+        to = []
 
-  the_sorter.start()
-  try:
-    while True:
-      time.sleep(check_point)
-      the_sorter.check_point()
-  except KeyboardInterrupt:
-    the_sorter.stop()
-  the_sorter.join()
+    the_sorter = Sorter(
+        base=args["--source"],
+        dst=args["--dest"],
+        fmt=args["--folder-format"],
+        timestamp=args["--filesystem-timestamp"],
+        nodate=args["--no-date-path"],
+        move=not (args["--copy"]),
+        dry=args["--dry-run"],
+        email=args["--email"],
+        hostname=args["--hostname"],
+        sender=args["--sender"],
+        to=to,
+        server=args["--server"],
+        port=int(args["--port"]),
+        username=args["--username"],
+        password=args["--password"],
+        idleness=idleness,
+    )
+
+    the_sorter.start()
+    try:
+        while True:
+            time.sleep(check_point)
+            the_sorter.check_point()
+    except KeyboardInterrupt:
+        the_sorter.stop()
+    the_sorter.join()

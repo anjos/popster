@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''Utilities to use the QNAP Container Station API
+"""Utilities to use the QNAP Container Station API
 
 See documentation here: http://qnap-dev.github.io/container-station-api/index.html
-'''
+"""
 
 
 import os
+import sys
 import pickle
 import requests
 import getpass
@@ -15,26 +16,26 @@ import warnings
 import contextlib
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 import pkg_resources
 
 
-USERNAME = os.environ.get('QNAP_USERNAME', 'admin')
-PASSWORD = os.environ.get('QNAP_PASSWORD')
-SERVER = os.environ.get('QNAP_SERVER', 'https://orquidea.local')
-SESSION_FILE = os.path.expanduser('~/.qnap-auth.pickle')
+SESSION_FILE = os.path.expanduser("~/.qnap-auth.pickle")
 
 
 @contextlib.contextmanager
 def no_ssl_warnings(verify):
-  if not verify: warnings.filterwarnings('ignore', 'Unverified HTTPS request')
-  yield
-  if not verify: warnings.resetwarnings()
+    if not verify:
+        warnings.filterwarnings("ignore", "Unverified HTTPS request")
+    yield
+    if not verify:
+        warnings.resetwarnings()
 
 
-def api(session, url, verb='get', data=None, json=None, verify=False):
-  '''Calls the container station API with a given url and data dictionary
+def api(session, server, url, verb="get", data=None, json=None, verify=False):
+    """Calls the container station API with a given url and data dictionary
 
 
   Parameters:
@@ -42,8 +43,10 @@ def api(session, url, verb='get', data=None, json=None, verify=False):
     session (requests.Session): A previously opened session with the
       authentication cookies to use
 
+    server (str): The server to reach
+
     url (str): The URL to call on the container station API, relative to the
-      the address ``<SERVER>/containerstation/api/v1", which is always
+      the address ``/containerstation/api/v1", which is always
       prepended.
 
     verb (str, Optional): One of the HTTP verbs to query the URL with. If not
@@ -62,19 +65,25 @@ def api(session, url, verb='get', data=None, json=None, verify=False):
 
     requests.Result: An object that contains the reply from the HTTP API call
 
-  '''
+  """
 
-  url = SERVER + '/containerstation/api/v1' + url
-  logger.debug('%s %s', verb.upper(), url)
-  with no_ssl_warnings(verify):
-    return getattr(session, verb)(url, data=data, json=json, verify=verify)
+    url = server + "/containerstation/api/v1" + url
+    logger.debug("%s %s", verb.upper(), url)
+    with no_ssl_warnings(verify):
+        return getattr(session, verb)(url, data=data, json=json, verify=verify)
 
 
-def login(verify=False):
-  '''Logs-in the server, if a session file is not available yet.
+def login(server, username, password, verify=False):
+    """Logs-in the server, if a session file is not available yet.
 
 
   Parameters:
+
+    server (str): The server to reach
+
+    username (str): The user identifier to use for login
+
+    password (str): The user password for login
 
     verify (bool, Optional): If should use ``verify=True`` for requests calls
 
@@ -84,87 +93,94 @@ def login(verify=False):
     requests.Session: A restored or new session after successfuly
     authenticating to the server
 
-  '''
+  """
 
-  if os.path.exists(SESSION_FILE):
-    logger.debug('Session file (%s) exists - trying to use it', SESSION_FILE)
-    with open(SESSION_FILE, 'rb') as f:
-      session = pickle.load(f)
-    result = api(session, '/login_refresh', verify=verify)
-    if 'error' in result.json():
-      logout(verify=verify)
+    if os.path.exists(SESSION_FILE):
+        logger.debug(
+            "Session file (%s) exists - trying to use it", SESSION_FILE
+        )
+        with open(SESSION_FILE, "rb") as f:
+            session = pickle.load(f)
+        result = api(session, server, "/login_refresh", verify=verify)
+        if "error" in result.json():
+            logout(server, verify=verify)
 
-  if not os.path.exists(SESSION_FILE):
-    logger.debug('Session file (%s) does not exist - logging-in', SESSION_FILE)
-    global PASSWORD
-    if PASSWORD is None:
-      import getpass
-      PASSWORD = getpass.getpass("Password for %s [%s]: " % (USERNAME, SERVER))
+    if not os.path.exists(SESSION_FILE):
+        logger.debug(
+            "Session file (%s) does not exist - logging-in", SESSION_FILE
+        )
 
-    session = requests.Session()
-    data = {
-        'username': USERNAME,
-        'password': PASSWORD,
-        }
-    result = api(session, '/login', verb='post', data=data, verify=verify)
+        session = requests.Session()
+        data = dict(username=username, password=password)
+        result = api(
+            session, server, "/login", verb="post", data=data, verify=verify
+        )
 
-  if result.status_code != 200:
-    raise RuntimeError('Login request failed with status code %d' % \
-        result.status_code)
-  response = result.json()
-  if response.get('username') != USERNAME:
-    raise RuntimeError('Login request for user %s failed (%s is ' \
-        'logged in)' % (USERNAME, response.get('username')))
+    if result.status_code != 200:
+        raise RuntimeError(
+            "Login request failed with status code %d" % result.status_code
+        )
+    response = result.json()
+    if response.get("username") != username:
+        raise RuntimeError(
+            "Login request for user %s failed (%s is "
+            "logged in)" % (username, response.get("username"))
+        )
 
-  with open(SESSION_FILE, 'wb') as f: pickle.dump(session, f)
+    with open(SESSION_FILE, "wb") as f:
+        pickle.dump(session, f)
 
-  return session
+    return session
 
 
-def logout(verify=False):
-  '''Logs the user out
+def logout(server, verify=False):
+    """Logs the user out
 
 
   Parameters:
 
-    session (requests.Session): A previously opened session you'd like to close
+    server (str): The server to reach
 
     verify (bool, Optional): If should use ``verify=True`` for requests calls
 
-  '''
+  """
 
-  if not os.path.exists(SESSION_FILE):
-    logger.error('No session file exists at %s - not logging out',
-        SESSION_FILE)
-    return
+    if not os.path.exists(SESSION_FILE):
+        logger.error(
+            "No session file exists at %s - not logging out", SESSION_FILE
+        )
+        return
 
-  logger.debug('Logging out...')
+    logger.debug("Logging out...")
 
-  with open(SESSION_FILE, 'rb') as f: session = pickle.load(f)
+    with open(SESSION_FILE, "rb") as f:
+        session = pickle.load(f)
 
-  result = api(session, '/logout', verb='put', verify=verify)
-  response = result.json()
+    result = api(session, server, "/logout", verb="put", verify=verify)
+    response = result.json()
 
-  if os.path.exists(SESSION_FILE):
-    logger.debug('Removing %s...', SESSION_FILE)
-    os.unlink(SESSION_FILE)
+    if os.path.exists(SESSION_FILE):
+        logger.debug("Removing %s...", SESSION_FILE)
+        os.unlink(SESSION_FILE)
 
-  session.close() # close all connections
+    session.close()  # close all connections
 
 
 @contextlib.contextmanager
-def session(verify=False):
-  '''Context manager that opens and closes a connection to the NAS'''
+def session(server, username, password, verify=False):
+    """Context manager that opens and closes a connection to the NAS"""
 
-  yield login(verify=verify)
-  logout(verify=verify)
+    yield login(server, username, password, verify=verify)
+    logout(server, verify=verify)
 
 
-def system(session=None, verify=False):
-  '''Checks system information
+def system(server, session=None, verify=False):
+    """Checks system information
 
 
   Parameters:
+
+    server (str): The server to reach
 
     session (requests.Session): A previously opened session you'd like to close
 
@@ -175,18 +191,20 @@ def system(session=None, verify=False):
 
     dict: A valid JSON object, decoded into Python
 
-  '''
+  """
 
-  return api(session, '/system', verify=verify).json()
+    return api(session, server, "/system", verify=verify).json()
 
 
-def get_containers(session, verify=False):
-  '''Gets all information on available containers
+def get_containers(session, server, verify=False):
+    """Gets all information on available containers
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
+
+    server (str): The server to reach
 
     verify (bool, Optional): If should use ``verify=True`` for requests calls
 
@@ -195,18 +213,20 @@ def get_containers(session, verify=False):
 
     list of dict: Containing information about all running containers
 
-  '''
+  """
 
-  return api(session, '/container', verify=verify).json()
+    return api(session, server, "/container", verify=verify).json()
 
 
-def inspect_container(session, id_, verify=False):
-  '''Gets all information on the container with the given identifier
+def inspect_container(session, server, id_, verify=False):
+    """Gets all information on the container with the given identifier
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
+
+    server (str): The server to reach
 
     id_ (str): The identify of the container to inspect
 
@@ -217,18 +237,22 @@ def inspect_container(session, id_, verify=False):
 
     list: A valid JSON object, decoded into Python
 
-  '''
+  """
 
-  return api(session, '/container/docker/%s/inspect' % id_, verify=verify).json()
+    return api(
+        session, server, "/container/docker/%s/inspect" % id_, verify=verify
+    ).json()
 
 
-def stop_container(session, id_, verify=False):
-  '''Stops the container with the given identifier
+def stop_container(session, server, id_, verify=False):
+    """Stops the container with the given identifier
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
+
+    server (str): The server to reach
 
     id_ (str): The identify of the container to stop
 
@@ -239,19 +263,26 @@ def stop_container(session, id_, verify=False):
 
     list: A valid JSON object, decoded into Python
 
-  '''
+  """
 
-  return api(session, '/container/docker/%s/stop' % id_, verb='put',
-      verify=verify).json()
+    return api(
+        session,
+        server,
+        "/container/docker/%s/stop" % id_,
+        verb="put",
+        verify=verify,
+    ).json()
 
 
-def remove_container(session, id_, verify=False):
-  '''Removes the container with the given identifier
+def remove_container(session, server, id_, verify=False):
+    """Removes the container with the given identifier
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
+
+    server (str): The server to reach
 
     id_ (str): The identify of the container to be removed
 
@@ -262,21 +293,34 @@ def remove_container(session, id_, verify=False):
 
     list: A valid JSON object, decoded into Python
 
-  '''
+  """
 
-  return api(session, '/container/docker/%s' % id_, verb='delete',
-      verify=verify).json()
+    return api(
+        session,
+        server,
+        "/container/docker/%s" % id_,
+        verb="delete",
+        verify=verify,
+    ).json()
 
 
-def create_container(session, name, options, image='anjos/popster',
-    tag='v%s' % pkg_resources.require('popster')[0].version,
-    verify=False):
-  '''Creates a container with an existing image
+def create_container(
+    session,
+    server,
+    name,
+    options,
+    image="anjos/popster",
+    tag="v%s" % pkg_resources.require("popster")[0].version,
+    verify=False,
+):
+    """Creates a container with an existing image
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
+
+    server (str): The server to reach
 
     name (str): The name of the container to update
 
@@ -289,35 +333,38 @@ def create_container(session, name, options, image='anjos/popster',
 
     verify (bool, Optional): If should use ``verify=True`` for requests calls
 
-  '''
+  """
 
-  info = dict(
-      type = 'docker',
-      name = name,
-      image = image,
-      tag = tag,
-      )
+    info = dict(type="docker", name=name, image=image, tag=tag,)
 
-  # prepares new container information
-  info.update(options)
+    # prepares new container information
+    info.update(options)
 
-  response = api(session, '/container', verb='post', json=info, verify=verify)
-  return response.json()
+    response = api(
+        session, server, "/container", verb="post", json=info, verify=verify
+    )
+    return response.json()
 
 
-def retrieve_logs(session, id_, tail=1000, verify=False):
-  '''Retrieves the logs from container
+def retrieve_logs(session, server, id_, tail=1000, verify=False):
+    """Retrieves the logs from container
 
 
   Parameters:
 
     session (requests.Session): A previously opened session you'd like to close
 
+    server (str): The server to reach
+
     id_ (str): The identifier of the container to retrieve logs from
 
     verify (bool, Optional): If should use ``verify=True`` for requests calls
 
-  '''
+  """
 
-  return api(session, '/container/docker/%s/logs?tail=%d' % (id_, tail),
-      verify=verify).json()
+    return api(
+        session,
+        server,
+        "/container/docker/%s/logs?tail=%d" % (id_, tail),
+        verify=verify,
+    ).json()
