@@ -207,7 +207,7 @@ def recommend_action(duplicates):
 
         # if base directories are the same, then preserve the copy with the
         # shortest name as a rule of thumb.
-        if _all_equal([os.path.dirname(k) for k in keep]):
+        if len(keep) >= 2 and _all_equal([os.path.dirname(k) for k in keep]):
             s = sorted(keep, key=lambda x: len(x))
             for i in s[1:]:
                 erase.append(i)
