@@ -71,7 +71,7 @@ def main(user_input=None):
     erase, check = recommend_action(dups)
 
     if args["--output"]:  #write to file instead of screen
-        with open(args["--ouptut"], "wt") as f:
+        with open(args["--output"], "wt") as f:
 
             f.write(f"#!/usr/bin/env bash\n\n")
             f.write(f"## Recommending removal of {len(erase)} files...\n")
