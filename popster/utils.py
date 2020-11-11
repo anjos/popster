@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def retrieve_json_secret(key):
     """Retrieves a secret in JSON format from password-store"""
 
-    logger.info(f"Retrieving '{key}' from password-store...", key)
+    logger.info(f"Retrieving '{key}' from password-store...")
     passbin = shutil.which("pass")
     if passbin is None:
         raise RuntimeError(

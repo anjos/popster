@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Dump (optionless) script that just deployes all our containers"""
+"""Dumb (optionless) script that just deployes all our containers"""
 
 import os
 from . import qnap, utils

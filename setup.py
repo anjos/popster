@@ -23,6 +23,7 @@ setup(
         "pymediainfo",
         "pillow",
         "tqdm",
+        "requests",
     ],
     entry_points={
         "console_scripts": [

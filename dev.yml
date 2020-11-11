@@ -11,6 +11,7 @@ dependencies:
 - pymediainfo
 - watchdog
 - tqdm
+- requests
 - pip
 - pip:
   - ipdb

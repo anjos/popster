@@ -68,7 +68,7 @@ def api(session, server, url, verb="get", data=None, json=None, verify=False):
   """
 
     url = server + "/containerstation/api/v1" + url
-    logger.debug("%s %s", verb.upper(), url)
+    logger.debug(f"{verb.upper()} {url}")
     with no_ssl_warnings(verify):
         return getattr(session, verb)(url, data=data, json=json, verify=verify)
 
@@ -96,9 +96,7 @@ def login(server, username, password, verify=False):
   """
 
     if os.path.exists(SESSION_FILE):
-        logger.debug(
-            "Session file (%s) exists - trying to use it", SESSION_FILE
-        )
+        logger.debug(f"Session file ({SESSION_FILE}) exists - trying to use it")
         with open(SESSION_FILE, "rb") as f:
             session = pickle.load(f)
         result = api(session, server, "/login_refresh", verify=verify)
@@ -106,9 +104,7 @@ def login(server, username, password, verify=False):
             logout(server, verify=verify)
 
     if not os.path.exists(SESSION_FILE):
-        logger.debug(
-            "Session file (%s) does not exist - logging-in", SESSION_FILE
-        )
+        logger.debug(f"Session file ({SESSION_FILE}) does not exist - logging-in")
 
         session = requests.Session()
         data = dict(username=username, password=password)
@@ -146,9 +142,7 @@ def logout(server, verify=False):
   """
 
     if not os.path.exists(SESSION_FILE):
-        logger.error(
-            "No session file exists at %s - not logging out", SESSION_FILE
-        )
+        logger.error(f"No session file exists at {SESSION_FILE} - not logging out")
         return
 
     logger.debug("Logging out...")
@@ -160,7 +154,7 @@ def logout(server, verify=False):
     response = result.json()
 
     if os.path.exists(SESSION_FILE):
-        logger.debug("Removing %s...", SESSION_FILE)
+        logger.debug(f"Removing {SESSION_FILE}...")
         os.unlink(SESSION_FILE)
 
     session.close()  # close all connections
