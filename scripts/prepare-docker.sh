@@ -28,7 +28,7 @@ cat ${condarc}
 ${conda_dir}/bin/conda install -n root conda conda-build
 
 # cleans up
-${conda_dir}/bin/conda clean --lock
+${conda_dir}/bin/conda clean
 
 # print conda information for debugging purposes
 ${conda_dir}/bin/conda info
