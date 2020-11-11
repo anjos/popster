@@ -25,5 +25,6 @@ RUN CONDA_DIR="/opt/conda" && \
     chmod 777 "$CONDA_DIR/locks"
 
 # Export this command
+ENV PATH="/opt/conda/bin:${PATH}"
 ENTRYPOINT ["/opt/conda/bin/watch"]
 CMD ["--help"]
