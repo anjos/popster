@@ -15,13 +15,7 @@ import nose.tools
 # date used for testing purposes
 DUMMY_DATE = datetime.datetime(2002, 1, 26, 11, 49, 44)
 
-# work around to get TemporaryDirectory even in Python 2.x
-import six
-
-if six.PY2:
-    from .backports.tempfile import TemporaryDirectory
-else:
-    from tempfile import TemporaryDirectory
+from tempfile import TemporaryDirectory
 
 
 from .sorter import (
@@ -33,6 +27,8 @@ from .sorter import (
     Sorter,
     UnsupportedExtensionError,
 )
+
+from .dedup import check_duplicates, recommend_action
 
 
 def data_path(f=None):
@@ -791,3 +787,44 @@ def test_start_with_files():
         # asserts the original directory is removed up to, but excluding, src
         assert not os.path.exists(src), "%r still exists" % src
         assert os.path.exists(base), "%r does not exist" % base
+
+
+def test_dedup():
+
+    # test de-duplication of files works as expected
+
+    with TemporaryDirectory() as tmpdir:
+        ex1 = os.path.realpath(os.path.join(tmpdir, "img_with_exif.jpg"))
+        shutil.copy2(data_path("img_with_exif.jpg"), ex1)
+        ex2 = os.path.realpath(os.path.join(tmpdir, "img.heic"))
+        shutil.copy2(data_path("img.heic"), ex2)
+        copy1 = os.path.realpath(os.path.join(tmpdir, "img~.heic"))
+        shutil.copy2(data_path("img.heic"), copy1)
+        copy2 = os.path.realpath(os.path.join(tmpdir, "img~~.heic"))
+        shutil.copy2(data_path("img.heic"), copy2)
+        copy3 = os.path.realpath(os.path.join(tmpdir, "another_name.heic"))
+        shutil.copy2(data_path("img.heic"), copy3)
+        dir2 = os.path.join(tmpdir, "subdir")
+        os.makedirs(dir2)
+        copy4 = os.path.realpath(os.path.join(dir2, "another_name.heic"))
+        shutil.copy2(data_path("img.heic"), copy4)
+
+        duplicates = check_duplicates((tmpdir,))
+
+        # there is only one item duplicated here
+        assert len(duplicates) == 1
+        assert ex1 not in duplicates[0]
+        assert ex2 in duplicates[0]
+        assert copy1 in duplicates[0]
+        assert copy2 in duplicates[0]
+        assert copy3 in duplicates[0]
+        assert copy4 in duplicates[0]
+
+        remove, check = recommend_action(duplicates)
+        assert len(remove) == 2
+        assert copy1 in remove
+        assert copy2 in remove
+        assert len(check) == 1
+        assert ex2 in check[0]
+        assert copy3 in check[0]
+        assert copy4 in check[0]

@@ -1,16 +1,17 @@
 name: popster-dev
 channels:
 - anjos
-- https://www.idiap.ch/software/bob/conda
 - defaults
 dependencies:
-- python=3.7
-- six
+- python=3.8
 - ncurses
 - docopt
 - exifread
 - pillow
 - pymediainfo
 - watchdog
-- bob.buildout
-- ipdb
+- tqdm
+- pip
+- pip:
+  - ipdb
+  - bob.buildout

@@ -1,5 +1,5 @@
 {% set name="MediaInfo" %}
-{% set version="19.09" %}
+{% set version="20.09" %}
 
 package:
   name: {{ name | lower }}
@@ -8,7 +8,7 @@ package:
 source:
   fn: {{ name }}_CLI_{{ version }}_GNU_FromSource.tar.bz2
   url: https://mediaarea.net/download/binary/{{ name | lower }}/{{ version }}/{{ name }}_CLI_{{ version }}_GNU_FromSource.tar.bz2
-  sha256: 8b07022943b478ba591eabfb1e6fdc3cdebeb1ec9ffcb4c30751f0a7cd22bf7c
+  sha256: a252aa61dc1f4caeb9dc76d82292cadc993fb112a402dffd9e442e7fdf76e88e
 
 build:
   number: 0

@@ -1,6 +1,6 @@
 {% set name="pymediainfo" %}
-{% set version="4.1" %}
-{% set sha256="ed6a8f3dcd255895021d40d1299be333a1bead3dbe8df4cbe1a863ba8fee1756" %}
+{% set version="4.2.1" %}
+{% set sha256="392d99d6bf74046ebaa2f7036d92d5327611d27532a384540e9310a62b8be26d" %}
 
 package:
   name: {{ name | lower }}
@@ -22,6 +22,7 @@ requirements:
     - setuptools_scm
   run:
     - python
+    - setuptools
     - mediainfo
 
 test:

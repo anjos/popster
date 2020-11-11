@@ -88,6 +88,8 @@ Then, you can build dependencies one by one, in order::
   $ vi ./scripts/conda-build-all.sh #comment/uncomment what to compile
   $ conda activate base
   (base) $ ./scripts/conda-build-all.sh
+  ...
+  (base) $ #now, execute the lines of interest
 
 
 Anaconda Uploads
@@ -100,7 +102,7 @@ everytime), do::
   # enter credentials
   $ anaconda upload <conda-bld>/*-64/mediainfo-*.tar.bz2
   $ anaconda upload <conda-bld>/*-64/pymediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/noarch/{exifread,argh,pathtools,watchdog,popster}-*.tar.bz2
+  $ anaconda upload <conda-bld>/noarch/{exifread,popster}-*.tar.bz2
 
 
 Docker Image Building

@@ -35,6 +35,7 @@ Examples:
 
 import os
 import sys
+import shutil
 
 
 def main(user_input=None):
@@ -60,10 +61,10 @@ def main(user_input=None):
 
     logger = setup_logger("popster", args["--verbose"])
 
-    from .utils import which, heic_to_jpeg
+    from .utils import heic_to_jpeg
     from .sorter import read_creation_date
 
-    sips = which("sips")
+    sips = shutil.which("sips")
     if sips is None:
         logger.critical(
             'Cannot find "sips" application on your $PATH '

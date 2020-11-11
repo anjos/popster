@@ -11,24 +11,26 @@ source:
 build:
   number: 0
   preserve_egg_dir: True
-  script: python setup.py install --single-version-externally-managed --record=record.txt
+  script: python -m pip install --no-deps --ignore-installed .
   entry_points:
     - watch = popster.watch:main
     - check_date = popster.check_date:main
+    - heic_to_jpeg = popster.heic_to_jpeg:main
+    - deduplicate = popster.deduplicate:main
 
 requirements:
   build:
     - python
-    - setuptools
+    - pip
 
   run:
     - python
-    - six
     - docopt
     - watchdog
     - exifread
     - pymediainfo
     - pillow
+    - tqdm
 
 test:
   imports:
@@ -42,6 +44,7 @@ test:
     - watch --help
     - check_date --help
     - heic_to_jpeg --help
+    - deduplicate --help
     - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
 
 about:
