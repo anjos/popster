@@ -1,0 +1,47 @@
+name: ci
+
+on:  # Define here when your project will be tested
+  push:               # all branches are tested on pushes to the repo
+  pull_request:       # all pull-requests will be tested
+  workflow_dispatch:  # this allows you to 'manually' launch the workflow
+
+jobs:
+  test:
+    name: Test conda-build on Python ${{ matrix.python-version }}
+    runs-on: ubuntu-latest
+
+    # Here we will define the testing 'matrix'
+    # -- It can be composed of whatever your matrix may be,
+    # -- including OS variations (e.g. windows, macos, etc).
+    # -- The executor will combine all possible values together
+    strategy:
+      fail-fast: false  # avoids cancelled builds if the other fails
+      matrix:
+        python-version: ['3.8', '3.9']
+
+    # Here we define the steps to be undertaken for every test
+    # -- Each step does one action.  Code for the action sits in
+    # -- another github project (key 'uses').  This way, actions
+    # -- can be programmed for any purpose.
+    steps:
+
+      # Action provided by GitHub to checkout code
+      - name: Check out repository code
+        uses: actions/checkout@v2
+
+      # Action provided by 'conda-incubator' to setup conda env
+      - name: Setup mambaforge
+        uses: conda-incubator/setup-miniconda@v2
+        with:
+          auto-update-conda: true
+          auto-activate-base: false
+          miniforge-variant: Mambaforge
+          miniforge-version: latest
+          activate-environment: base
+
+      - name: Build conda package
+        shell: bash -l {0}
+        run: |
+          mamba info -a
+          mamba install conda-build
+          conda build --python=${{ matrix.python-version }} conda

@@ -10,7 +10,7 @@ import shutil
 import datetime
 import pkg_resources
 
-import nose.tools
+import pytest
 
 # date used for testing purposes
 DUMMY_DATE = datetime.datetime(2002, 1, 26, 11, 49, 44)
@@ -43,7 +43,7 @@ def test_jpeg_readout():
     # Tests one extract the proper exif tag from a jpeg file
 
     date = read_creation_date(data_path("img_with_exif.jpg"))
-    nose.tools.eq_(date, datetime.datetime(2003, 12, 14, 12, 1, 44))
+    assert date == datetime.datetime(2003, 12, 14, 12, 1, 44)
 
 
 def test_png_readout():
@@ -51,7 +51,7 @@ def test_png_readout():
     # Tests one extract the proper date from a png file
 
     date = read_creation_date(data_path("img_with_xmp.png"))
-    nose.tools.eq_(date, datetime.datetime(2017, 8, 29, 16, 55, 32))
+    assert date == datetime.datetime(2017, 8, 29, 16, 55, 32)
 
 
 def test_heic_readout():
@@ -59,7 +59,7 @@ def test_heic_readout():
     # Tests one extract the proper date from a heic file
 
     date = read_creation_date(data_path("img.heic"))
-    nose.tools.eq_(date, datetime.datetime(2018, 12, 22, 10, 32, 34))
+    assert date == datetime.datetime(2018, 12, 22, 10, 32, 34)
 
 
 def test_aae_readout():
@@ -72,7 +72,7 @@ def test_aae_readout():
     os.utime(f, (_time, _time))
 
     date = read_creation_date(data_path("editing_info.aae"))
-    nose.tools.eq_(date, DUMMY_DATE)
+    assert date == DUMMY_DATE
 
 
 def test_movie_readout():
@@ -80,21 +80,21 @@ def test_movie_readout():
     # Tests one extract the proper exif tag from a jpeg file
 
     date = read_creation_date(data_path("mp4.mp4"))
-    nose.tools.eq_(date, datetime.datetime(2005, 10, 28, 17, 46, 46))
+    assert date == datetime.datetime(2005, 10, 28, 17, 46, 46)
 
 
-@nose.tools.raises(DateReadoutError)
 def test_exif_failure():
 
     # Tests it raises a proper exception when the jpeg file has no exif info
-    read_creation_date(data_path("img_without_exif.jpg"))
+    with pytest.raises(DateReadoutError):
+        read_creation_date(data_path("img_without_exif.jpg"))
 
 
-@nose.tools.raises(DateReadoutError)
 def test_xmp_failure():
 
     # Tests it raises a proper exception when the jpeg file has no exif info
-    read_creation_date(data_path("img_without_xmp.png"))
+    with pytest.raises(DateReadoutError):
+        read_creation_date(data_path("img_without_xmp.png"))
 
 
 def test_make_dirs():
@@ -112,7 +112,7 @@ def test_make_dirs():
         os.makedirs(top, mode)
         os.chmod(top, mode)  # reset group set bit, others because of umask
         info = os.stat(top)
-        nose.tools.eq_(oct(info.st_mode), oct(mode))
+        assert oct(info.st_mode) == oct(mode)
         owner_id = info.st_uid
         group_id = info.st_gid
 
@@ -121,32 +121,32 @@ def test_make_dirs():
         test = os.path.join(top, "test")
         info = os.stat(test)
         # checks if preserves parent mode, owner and group
-        nose.tools.eq_(oct(info.st_mode), oct(mode))
-        nose.tools.eq_(info.st_uid, owner_id)
-        nose.tools.eq_(info.st_gid, group_id)
+        assert oct(info.st_mode) == oct(mode)
+        assert info.st_uid == owner_id
+        assert info.st_gid == group_id
 
         # go deeper, should preserve
         make_dirs(top, "test/a/b/c/d", dry=False)  # inherit parents permissions
         test = os.path.join(top, "test")
         info = os.stat(test)
         # checks if preserves parent mode, owner and group
-        nose.tools.eq_(oct(info.st_mode), oct(mode))
-        nose.tools.eq_(info.st_uid, owner_id)
-        nose.tools.eq_(info.st_gid, group_id)
+        assert oct(info.st_mode) == oct(mode)
+        assert info.st_uid == owner_id
+        assert info.st_gid == group_id
 
         test = os.path.join(top, "test/a/b")
         info = os.stat(test)
         # checks if preserves parent mode, owner and group
-        nose.tools.eq_(oct(info.st_mode), oct(mode))
-        nose.tools.eq_(info.st_uid, owner_id)
-        nose.tools.eq_(info.st_gid, group_id)
+        assert oct(info.st_mode) == oct(mode)
+        assert info.st_uid == owner_id
+        assert info.st_gid == group_id
 
         test = os.path.join(top, "test/a/b/c/d")
         info = os.stat(test)
         # checks if preserves parent mode, owner and group
-        nose.tools.eq_(oct(info.st_mode), oct(mode))
-        nose.tools.eq_(info.st_uid, owner_id)
-        nose.tools.eq_(info.st_gid, group_id)
+        assert oct(info.st_mode) == oct(mode)
+        assert info.st_uid == owner_id
+        assert info.st_gid == group_id
 
 
 def test_move_jpg():
@@ -257,7 +257,6 @@ def test_move_png_nodate():
         assert os.path.exists(base)  # not removed
 
 
-@nose.tools.raises(UnsupportedExtensionError)
 def test_move_unsupported_raises():
 
     # Tests if can correctly detect moving fails
@@ -271,18 +270,19 @@ def test_move_unsupported_raises():
         os.mkdir(subfolder)
         shutil.copy2(src, subfolder)
         src = os.path.join(subfolder, os.path.basename(src))
-        result = copy(
-            src,
-            dst,
-            fmt,
-            timestamp=False,
-            nodate="nodate",
-            move=True,
-            dry=False,
-        )
-        assert os.path.exists(result)
-        assert os.path.exists(subfolder)  # not removed
-        assert os.path.exists(base)  # not removed
+        with pytest.raises(UnsupportedExtensionError):
+            result = copy(
+                src,
+                dst,
+                fmt,
+                timestamp=False,
+                nodate="nodate",
+                move=True,
+                dry=False,
+            )
+            assert os.path.exists(result)
+            assert os.path.exists(subfolder)  # not removed
+            assert os.path.exists(base)  # not removed
 
 
 def test_move_dry():
@@ -397,7 +397,6 @@ def test_copy_nodate():
         assert os.path.exists(subfolder)
 
 
-@nose.tools.raises(UnsupportedExtensionError)
 def test_copy_unsupported_raises():
 
     # Tests if can organize at least the sample photo
@@ -411,17 +410,18 @@ def test_copy_unsupported_raises():
         os.mkdir(subfolder)
         shutil.copy2(src, subfolder)
         src = os.path.join(subfolder, os.path.basename(src))
-        result = copy(
-            src,
-            dst,
-            fmt,
-            timestamp=False,
-            nodate="nodate",
-            move=False,
-            dry=False,
-        )
-        assert os.path.exists(result)
-        assert os.path.exists(subfolder)
+        with pytest.raises(UnsupportedExtensionError):
+            result = copy(
+                src,
+                dst,
+                fmt,
+                timestamp=False,
+                nodate="nodate",
+                move=False,
+                dry=False,
+            )
+            assert os.path.exists(result)
+            assert os.path.exists(subfolder)
 
 
 def test_copy_dry():
@@ -494,11 +494,11 @@ def test_move_many():
             dry=False,
         )
         bad_full = [os.path.join(base, k) for k in bad_src]
-        nose.tools.eq_(sorted(bad_full), sorted(bad))
+        assert sorted(bad_full) == sorted(bad)
         for k in bad_full:
             assert os.path.exists(k), "%r does not exist" % k
         good_full = [os.path.join(dst, k) for k in good_dst]
-        nose.tools.eq_(sorted(good_full), sorted(good))
+        assert sorted(good_full) == sorted(good)
         for k in good_full:
             assert os.path.exists(k), "%r does not exist" % k
         old_good_full = [os.path.join(base, k) for k in good_src]
@@ -558,7 +558,7 @@ def test_move_all():
         assert len(bad) == 0
 
         good_full = [os.path.join(dst, k) for k in good_dst]
-        nose.tools.eq_(sorted(good_full), sorted(good))
+        assert sorted(good_full) == sorted(good)
         for k in good_full:
             assert os.path.exists(k), "%r does not exist" % k
         old_good_full = [os.path.join(base, k) for k in good_src]

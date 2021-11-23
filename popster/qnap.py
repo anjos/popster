@@ -38,36 +38,36 @@ def api(session, server, url, verb="get", data=None, json=None, verify=False):
     """Calls the container station API with a given url and data dictionary
 
 
-  Parameters:
+    Parameters:
 
-    session (requests.Session): A previously opened session with the
-      authentication cookies to use
+      session (requests.Session): A previously opened session with the
+        authentication cookies to use
 
-    server (str): The server to reach
+      server (str): The server to reach
 
-    url (str): The URL to call on the container station API, relative to the
-      the address ``/containerstation/api/v1", which is always
-      prepended.
+      url (str): The URL to call on the container station API, relative to the
+        the address ``/container-station/api/v1", which is always
+        prepended.
 
-    verb (str, Optional): One of the HTTP verbs to query the URL with. If not
-      specified, defaults to ``get``. Any verb available in
-      :py:class:`requests.Session` is acceptable.
+      verb (str, Optional): One of the HTTP verbs to query the URL with. If not
+        specified, defaults to ``get``. Any verb available in
+        :py:class:`requests.Session` is acceptable.
 
-    data (dict, Optional): A dictionary containing parameters to pass to the
-      API
+      data (dict, Optional): A dictionary containing parameters to pass to the
+        API
 
-    verify (bool, Optional): If should use ``verify=True`` for requests calls
+      verify (bool, Optional): If should use ``verify=True`` for requests calls
 
 
-  Returns:
+    Returns:
 
-    int: The returned status code
+      int: The returned status code
 
-    requests.Result: An object that contains the reply from the HTTP API call
+      requests.Result: An object that contains the reply from the HTTP API call
 
-  """
+    """
 
-    url = server + "/containerstation/api/v1" + url
+    url = server + "/container-station/api/v1" + url
     logger.debug(f"{verb.upper()} {url}")
     with no_ssl_warnings(verify):
         return getattr(session, verb)(url, data=data, json=json, verify=verify)
@@ -109,7 +109,7 @@ def login(server, username, password, verify=False):
         session = requests.Session()
         data = dict(username=username, password=password)
         result = api(
-            session, server, "/login", verb="post", data=data, verify=verify
+            session, server, "/login", verb="post", json=data, verify=verify
         )
 
     if result.status_code != 200:

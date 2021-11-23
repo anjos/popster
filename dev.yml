@@ -1,7 +1,5 @@
-name: popster-dev
 channels:
-- anjos
-- defaults
+- conda-forge
 dependencies:
 - python=3.8
 - ncurses
@@ -12,7 +10,7 @@ dependencies:
 - watchdog
 - tqdm
 - requests
+- ipdb
 - pip
-- pip:
-  - ipdb
-  - bob.buildout
+- pytest
+- pytest-cov

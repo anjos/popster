@@ -28,10 +28,9 @@ Installation
 I advise you to install a Conda_-based environment for deployment with this
 command line::
 
-  $ conda create --override-channels -c anjos -c defaults -n popster python=x.y popster
+  $ conda create --override-channels -c anjos -c conda-forge -n popster python=3.9 popster
 
-Where ``x.y`` can be either ``2.7`` or ``3.6``. Once the environment is
-installed, activate it to be able to call binaries::
+Once the environment is installed, activate it to be able to call binaries::
 
   $ source activate popster
 
@@ -52,7 +51,7 @@ Development
 I advise you to install a Conda_-based environment for development with this
 command line::
 
-  $ conda env create -f dev.yml
+  $ conda env create -f dev.yml -n popster-dev
 
 
 Build
@@ -61,7 +60,7 @@ Build
 To build the project and make it ready to run, do::
 
   $ source activate popster-dev
-  (popster-dev) $ buildout
+  (popster-dev) $ pip install -e .
 
 This command should leave you with a functional environment.
 
@@ -71,7 +70,7 @@ Testing
 
 To test the package, run the following::
 
-  (popster-dev) $ ./bin/nosetests -sv --with-coverage --cover-package=popster
+  (popster-dev) $ pytest -sv ./popster/test.py
 
 
 Conda Builds
@@ -95,14 +94,11 @@ Then, you can build dependencies one by one, in order::
 Anaconda Uploads
 ================
 
-To upload all built dependencies (so you don't have to re-build them
-everytime), do::
+To upload all built packages, do::
 
   $ anaconda login
   # enter credentials
-  $ anaconda upload <conda-bld>/*-64/mediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/*-64/pymediainfo-*.tar.bz2
-  $ anaconda upload <conda-bld>/noarch/{exifread,popster}-*.tar.bz2
+  $ anaconda upload <conda-bld>/*-64/popster-*.tar.bz2
 
 
 Docker Image Building
@@ -156,7 +152,7 @@ flawlessly. Other e-mail providers should also be reacheable in the same way.
 
 
 .. Place your references after this line
-.. _conda: http://conda.pydata.org/miniconda.html
+.. _conda: https://github.com/conda-forge/miniforge
 .. _mediainfo: https://mediaarea.net/en/MediaInfo
 .. _qpkg: https://wiki.qnap.com/wiki/QPKG_Development_Guidelines
 .. _dockerhub: https://hub.docker.com/r/anjos/popster/

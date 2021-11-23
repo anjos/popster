@@ -9,7 +9,7 @@ script_dir="$( cd "$(dirname "$0")" ; pwd -P )"
 project_dir=$(dirname ${script_dir})
 conda_dir=${HOME}/conda
 conda_bld=${conda_dir}/conda-bld
-image="continuumio/conda-concourse-ci:latest"
+image="quay.io/condaforge/linux-anvil-cos7-x86_64:latest"
 
 # Volumes to mount from the local work directory/conda build
 volumes=()
@@ -34,8 +34,8 @@ done
 if [ "$#" = "0" ]; then
   echo "Running interactively - execute /work/scripts/prepare-docker.sh"
   echo "  - only then you may run \`conda build <options> <recipe>'"
-  docker run ${parameters} --interactive ${image} bash
+  docker run --rm ${parameters} --interactive ${image} bash
 else
   echo "[${image}] automated - conda build $@"
-  docker run ${parameters} ${image} /work/scripts/run-on-docker.sh "$@"
+  docker run --rm ${parameters} ${image} /work/scripts/run-on-docker.sh "$@"
 fi

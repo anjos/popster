@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 # Prepares the docker container for a build
-conda_dir="/opt/miniconda"
-condarc="${conda_dir}/.condarc"
+conda_dir="/opt/conda"
+condarc="${conda_dir}/condarc"
+
+rm -f ~/.condarc
 
 cat <<EOF > ${condarc}
 default_channels: #!final
@@ -12,13 +14,14 @@ changeps1: false #!final
 always_yes: true #!final
 quiet: true #!final
 show_channel_urls: true #!final
+channel_priority: strict #!final
 anaconda_upload: false #!final
 ssl_verify: false #!final
 channels: #!final
 EOF
 
 echo "  - anjos" >> ${condarc}
-echo "  - defaults" >> ${condarc}
+echo "  - conda-forge" >> ${condarc}
 
 # displays contents of our configuration
 echo "Contents of \`${condarc}':"

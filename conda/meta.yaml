@@ -38,15 +38,15 @@ test:
     - {{ name }}
 
   requires:
-    - nose
-    - coverage
+    - pytest
+    - pytest-cov
 
   commands:
     - watch --help
     - check_date --help
     - heic_to_jpeg --help
     - deduplicate --help
-    - nosetests -sv --with-coverage --cover-package={{ name }} {{ name }}
+    - pytest --capture=no --verbose --cov {{ name }} --pyargs {{ name }}
 
 about:
   home: https://github.com/anjos/popster
