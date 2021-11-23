@@ -20,7 +20,6 @@ ssl_verify: false #!final
 channels: #!final
 EOF
 
-echo "  - anjos" >> ${condarc}
 echo "  - conda-forge" >> ${condarc}
 
 # displays contents of our configuration
@@ -28,10 +27,7 @@ echo "Contents of \`${condarc}':"
 cat ${condarc}
 
 # updates conda installation
-${conda_dir}/bin/conda install -n root conda conda-build
-
-# cleans up
-${conda_dir}/bin/conda clean
+${conda_dir}/bin/conda install -n base conda-build
 
 # print conda information for debugging purposes
 ${conda_dir}/bin/conda info
