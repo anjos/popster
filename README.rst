@@ -70,7 +70,7 @@ Testing
 
 To test the package, run the following::
 
-  (popster-dev) $ pytest -sv ./popster/test.py
+  (popster-dev) $ pytest -sv ./popster
 
 
 Conda Builds
