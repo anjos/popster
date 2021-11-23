@@ -1,5 +1,5 @@
-.. image:: https://travis-ci.org/anjos/popster.svg?branch=master
-   :target: https://travis-ci.org/anjos/popster
+.. image:: https://github.com/anjos/site/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/anjos/site/actions/workflows/ci.yml
 .. image:: https://img.shields.io/docker/pulls/anjos/popster.svg
    :target: https://hub.docker.com/r/anjos/popster/
 
@@ -9,7 +9,7 @@
 
 This is Popster, a photo importer and sorter written in Python. I wrote it to
 easily import photos from my cameras when I pop the SD card into the slot
-reader of my NAS (QNAP-451A), or via the USB port in the front.
+reader of my NAS (QNAP-453D), or via the USB port in the front.
 
 Popster watches a given folder for changes. Such a folder is the one you use to
 copy photos from your camera or SD card. In my QNAP NAS, that folder is
