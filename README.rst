@@ -1,5 +1,5 @@
-.. image:: https://github.com/anjos/site/actions/workflows/ci.yml/badge.svg
-   :target: https://github.com/anjos/site/actions/workflows/ci.yml
+.. image:: https://github.com/anjos/popster/actions/workflows/ci.yml/badge.svg
+   :target: https://github.com/anjos/popster/actions/workflows/ci.yml
 .. image:: https://img.shields.io/docker/pulls/anjos/popster.svg
    :target: https://hub.docker.com/r/anjos/popster/
 
