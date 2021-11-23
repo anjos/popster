@@ -33,8 +33,7 @@ jobs:
       - name: Setup mambaforge
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
-          auto-activate-base: false
+          auto-activate-base: true
           miniforge-variant: Mambaforge
           miniforge-version: latest
           activate-environment: base
