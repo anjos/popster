@@ -1,4 +1,4 @@
-FROM docker pull condaforge/mambaforge:latest
+FROM condaforge/mambaforge:latest
 
 # Install conda
 RUN CONDA_DIR="/opt/conda" && \

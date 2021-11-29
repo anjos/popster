@@ -7,20 +7,14 @@
 
 script_dir="$( cd "$(dirname "$0")" ; pwd -P )"
 project_dir=$(dirname ${script_dir})
-conda_dir=${HOME}/conda
+conda_dir=${HOME}/mamba
 conda_bld=${conda_dir}/conda-bld
 image="quay.io/condaforge/linux-anvil-cos7-x86_64:latest"
 
 # Volumes to mount from the local work directory/conda build
 volumes=()
 volumes+=("${project_dir}:/work")
-volumes+=("${conda_bld}/svn-cache:/opt/miniconda/conda-bld/svn-cache")
-volumes+=("${conda_bld}/hg-cache:/opt/miniconda/conda-bld/hg-cache")
-volumes+=("${conda_bld}/git-cache:/opt/miniconda/conda-bld/git-cache")
-volumes+=("${conda_bld}/src-cache:/opt/miniconda/conda-bld/src-cache")
-volumes+=("${conda_bld}/linux-64:/opt/miniconda/conda-bld/linux-64")
-volumes+=("${conda_bld}/linux-32:/opt/miniconda/conda-bld/linux-32")
-volumes+=("${conda_bld}/noarch:/opt/miniconda/conda-bld/noarch")
+volumes+=("${conda_bld}:/opt/conda/conda-bld")
 
 parameters="--tty"
 

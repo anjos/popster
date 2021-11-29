@@ -107,6 +107,8 @@ Docker Image Building
 To build a readily deployable docker image, do::
 
   $ docker build --rm -t anjos/popster:latest .
+  $ #to run a quick local test do:
+  $ docker run anjos/popster:latest --help
   $ #upload it like this:
   $ docker push anjos/popster:latest
 
